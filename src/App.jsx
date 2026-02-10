@@ -12,7 +12,8 @@ const App = () => {
   const [credentials, setCredentials] = useState({ username: '', password: '' });
   const [registerData, setRegisterData] = useState({
     name: '', email: '', age: '', phone: '',
-    address: '', username: '', password: ''
+    address: '', username: '', password: '',
+    department: '', hospital_name: '' // Added for doctors
   });
   const [loading, setLoading] = useState(false);
 
@@ -29,14 +30,20 @@ const App = () => {
   const handleRoleSelect = (selectedRole) => {
     setRole(selectedRole);
     setView('login');
+    // Reset credentials/register data logic if needed
   };
 
   const handleLogin = async (e) => {
     e.preventDefault();
     setLoading(true);
     try {
-      // For MVP, using same endpoint. In real app, might separate endpoints.
-      const res = await authService.loginPatient(credentials);
+      let res;
+      if (role === 'doctor') {
+        res = await authService.loginDoctor(credentials);
+      } else {
+        res = await authService.loginPatient(credentials);
+      }
+
       if (res.success) {
         const userData = { ...res.user, role }; // Attach selected role
         setUser(userData);
@@ -54,12 +61,20 @@ const App = () => {
     e.preventDefault();
     setLoading(true);
     try {
-      const res = await authService.registerPatient({ ...registerData, role });
+      let res;
+      if (role === 'doctor') {
+        // Ensure we send correct fields for doctor
+        res = await authService.registerDoctor({ ...registerData, role });
+      } else {
+        res = await authService.registerPatient({ ...registerData, role });
+      }
+
       if (res.success) {
         alert('Registration Successful! Please login.');
         setView('login');
       }
     } catch (err) {
+      console.error(err);
       alert(err.response?.data?.error || 'Registration Failed');
     } finally {
       setLoading(false);
@@ -139,6 +154,7 @@ const App = () => {
             </div>
 
             <form onSubmit={view === 'login' ? handleLogin : handleRegister} className="space-y-6">
+              {/* Registration Form */}
               {view === 'register' && (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <input
@@ -153,25 +169,53 @@ const App = () => {
                     placeholder="Email Address"
                     onChange={e => setRegisterData({ ...registerData, email: e.target.value })}
                   />
-                  <input
-                    className="input-field"
-                    placeholder="Age"
-                    type="number"
-                    required
-                    onChange={e => setRegisterData({ ...registerData, age: e.target.value })}
-                  />
-                  <input
-                    className="input-field"
-                    placeholder="Phone Number"
-                    required
-                    onChange={e => setRegisterData({ ...registerData, phone: e.target.value })}
-                  />
-                  <input
-                    className="input-field"
-                    placeholder="Address"
-                    required
-                    onChange={e => setRegisterData({ ...registerData, address: e.target.value })}
-                  />
+                  {/* Role Specific Fields */}
+                  {role === 'patient' ? (
+                    <>
+                      <input
+                        className="input-field"
+                        placeholder="Age"
+                        type="number"
+                        required
+                        onChange={e => setRegisterData({ ...registerData, age: e.target.value })}
+                      />
+                      <input
+                        className="input-field"
+                        placeholder="Phone Number"
+                        required
+                        onChange={e => setRegisterData({ ...registerData, phone: e.target.value })}
+                      />
+                      <input
+                        className="input-field"
+                        placeholder="Address"
+                        required
+                        onChange={e => setRegisterData({ ...registerData, address: e.target.value })}
+                      />
+                    </>
+                  ) : (
+                    <>
+                      {/* Doctor Fields */}
+                      <input
+                        className="input-field"
+                        placeholder="Specialization (Department)"
+                        required
+                        onChange={e => setRegisterData({ ...registerData, department: e.target.value })}
+                      />
+                      <input
+                        className="input-field"
+                        placeholder="Hospital Name"
+                        required
+                        onChange={e => setRegisterData({ ...registerData, hospital_name: e.target.value })}
+                      />
+                      <input
+                        className="input-field"
+                        placeholder="Phone Number"
+                        required
+                        onChange={e => setRegisterData({ ...registerData, phone: e.target.value })}
+                      />
+                    </>
+                  )}
+
                   <input
                     className="input-field"
                     placeholder="Username"
@@ -191,13 +235,13 @@ const App = () => {
               {view === 'login' && (
                 <div className="space-y-4">
                   <input
-                    className="input-field w-full"
-                    placeholder="Username"
+                    className="input-field w-full text-lg p-3"
+                    placeholder={role === 'doctor' ? "Email / Username" : "Username"}
                     required
                     onChange={e => setCredentials({ ...credentials, username: e.target.value })}
                   />
                   <input
-                    className="input-field w-full"
+                    className="input-field w-full text-lg p-3"
                     type="password"
                     placeholder="Password"
                     required

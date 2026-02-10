@@ -6,13 +6,23 @@ const API = axios.create({
 });
 
 export const authService = {
-    // 2. Ensure the path matches your server.js: /auth/login/patient
+    // Patient Auth
     loginPatient: async (data) => {
         const res = await API.post('/auth/login/patient', data);
         return res.data;
     },
     registerPatient: async (data) => {
         const res = await API.post('/auth/register/patient', data);
+        return res.data;
+    },
+
+    // Doctor Auth
+    loginDoctor: async (data) => {
+        const res = await API.post('/auth/login/doctor', data);
+        return res.data;
+    },
+    registerDoctor: async (data) => {
+        const res = await API.post('/auth/register/doctor', data);
         return res.data;
     }
 };
@@ -32,6 +42,5 @@ export const emergencyService = {
 };
 
 export const socket = {
-    // If you use sockets, they usually connect to the root URL, not /api
     url: 'https://mediverse-backend-production.up.railway.app'
 };

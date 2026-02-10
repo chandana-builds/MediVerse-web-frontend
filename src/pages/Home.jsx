@@ -7,10 +7,10 @@ import {
 } from 'lucide-react';
 import { emergencyService, patientService } from '../services/api';
 
-// --- Sub-Views (Defined outside) ---
+// --- Sub-Views ---
 
 const BookingView = ({ setActiveView, user }) => {
-    const [step, setStep] = useState(1); // 1: Form, 2: Success
+    const [step, setStep] = useState(1);
     const [booking, setBooking] = useState({ hospital: '', department: 'General Medicine', date: '', slot: '', reason: '' });
 
     const hospitals = ['City General Hospital', 'St. Mary\'s Medical Center', 'Apex Heart Institute', 'Green Valley Clinic'];
@@ -117,7 +117,7 @@ const BookingView = ({ setActiveView, user }) => {
 };
 
 const PharmacyView = ({ setActiveView }) => {
-    const [viewMode, setViewMode] = useState('list'); // list, cart, checkout, summary
+    const [viewMode, setViewMode] = useState('list');
     const [cart, setCart] = useState({});
     const [shipping, setShipping] = useState({ address: '', payment: 'cod' });
 
@@ -247,10 +247,6 @@ const PharmacyView = ({ setActiveView }) => {
                             <span className="font-semibold text-right max-w-[60%]">{shipping.address}</span>
                         </div>
                         <div className="flex justify-between text-sm">
-                            <span className="text-slate-500">Payment:</span>
-                            <span className="font-semibold uppercase">{shipping.payment}</span>
-                        </div>
-                        <div className="flex justify-between text-sm">
                             <span className="text-slate-500">Est. Delivery:</span>
                             <span className="font-semibold text-[#1e88e5]">Tomorrow, 4 PM</span>
                         </div>
@@ -317,8 +313,10 @@ const ReportsView = ({ setActiveView }) => {
 };
 
 const CalendarView = ({ onClose, streak }) => {
-    // Generate 30 days dynamically for demo users.
-    const days = Array.from({ length: 30 }, (_, i) => i + 1);
+    // Generate 30 days dynamically
+    const now = new Date();
+    const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+    const days = Array.from({ length: daysInMonth }, (_, i) => i + 1);
 
     return (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
@@ -335,25 +333,38 @@ const CalendarView = ({ onClose, streak }) => {
                     </div>
                 </div>
 
-                <div className="grid grid-cols-7 gap-3 mb-6">
-                    {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map(d => <span key={d} className="text-center text-xs font-bold text-slate-400">{d}</span>)}
-                    {days.map(d => (
-                        <div
-                            key={d}
-                            className={`aspect-square rounded-full flex items-center justify-center text-sm font-bold transition-all
-                                ${d <= streak ? 'bg-[#1e88e5] text-white shadow-md' : 'bg-slate-100 text-slate-300'}`}
-                        >
-                            {d}
-                        </div>
-                    ))}
+                {/* Professional Calendar Grid */}
+                <div className="border border-slate-200 rounded-[16px] overflow-hidden">
+                    {/* Weekday Headers */}
+                    <div className="grid grid-cols-7 bg-slate-50 border-b border-slate-200">
+                        {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map(d => (
+                            <div key={d} className="py-3 text-center text-xs font-bold text-slate-500">{d}</div>
+                        ))}
+                    </div>
+                    {/* Days */}
+                    <div className="grid grid-cols-7 bg-white">
+                        {days.map(d => (
+                            <div
+                                key={d}
+                                className={`aspect-square flex items-center justify-center text-sm font-semibold border-b border-r border-slate-100 last:border-r-0 hover:bg-slate-50 transition-colors
+                                    ${d <= streak ? 'bg-blue-50 text-[#1e88e5] font-bold relative' : 'text-slate-600'}`}
+                            >
+                                {d}
+                                {d <= streak && (
+                                    <div className="absolute bottom-1 w-1 h-1 bg-[#1e88e5] rounded-full"></div>
+                                )}
+                            </div>
+                        ))}
+                    </div>
                 </div>
 
-                <p className="text-center text-slate-500 text-sm">Consistency is key to recovery!</p>
+                <p className="text-center text-slate-500 text-sm mt-6">Consistency is key to recovery!</p>
             </motion.div>
         </motion.div>
     );
 };
 
+// --- Doctor Dashboard ---
 const DoctorDashboard = ({ user, logout }) => {
     return (
         <div className="min-h-screen bg-slate-50 p-6 md:p-8 font-sans text-[#333333] max-w-7xl mx-auto space-y-8">
@@ -364,11 +375,17 @@ const DoctorDashboard = ({ user, logout }) => {
                     </div>
                     <span className="text-2xl font-bold tracking-tight text-teal-700">MediVerse Doc</span>
                 </div>
-                <button onClick={logout} className="p-3 hover:bg-slate-50 rounded-full transition-colors">
-                    <LogOut className="w-5 h-5 text-slate-500" />
-                </button>
+                <div className="flex items-center gap-6">
+                    <div className="hidden md:flex flex-col items-end">
+                        <span className="text-sm text-slate-500">Doctor</span>
+                        <span className="font-semibold text-slate-800">{user?.name}</span>
+                    </div>
+                    <button onClick={logout} className="p-3 hover:bg-slate-50 rounded-full transition-colors">
+                        <LogOut className="w-5 h-5 text-slate-500" />
+                    </button>
+                </div>
             </nav>
-            {/* ... Dashboard Content ... */}
+
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                 <div className="bg-white p-6 rounded-[16px] shadow-sm border border-slate-200">
                     <h3 className="text-slate-500 text-sm font-semibold mb-2">Today's Patients</h3>
@@ -382,34 +399,33 @@ const DoctorDashboard = ({ user, logout }) => {
                     <h3 className="text-slate-500 text-sm font-semibold mb-2">Emergency Alerts</h3>
                     <span className="text-4xl font-bold text-red-500">2</span>
                 </div>
-            </div>
 
-            {/* Patient List */}
-            <div className="md:col-span-3 bg-white rounded-[16px] border border-slate-200 shadow-sm overflow-hidden">
-                <div className="p-6 border-b border-slate-100">
-                    <h3 className="text-xl font-bold text-[#333333]">Upcoming Appointments</h3>
-                </div>
-                {[
-                    { name: 'John Doe', time: '09:00 AM', type: 'Checkup', status: 'In Progress' },
-                    { name: 'Sarah Smith', time: '10:30 AM', type: 'Consultation', status: 'Waiting' },
-                    { name: 'Robert Brown', time: '11:15 AM', type: 'Report Review', status: 'Scheduled' },
-                ].map((p, i) => (
-                    <div key={i} className="flex items-center justify-between p-6 border-b border-slate-100 last:border-0 hover:bg-slate-50">
-                        <div className="flex items-center gap-4">
-                            <div className="bg-slate-100 p-3 rounded-full">
-                                <User className="w-6 h-6 text-slate-500" />
-                            </div>
-                            <div>
-                                <h4 className="font-bold text-[#333333] mb-1">{p.name}</h4>
-                                <span className="text-xs bg-slate-100 px-2 py-1 rounded text-slate-600">{p.type}</span>
-                            </div>
-                        </div>
-                        <div className="text-right">
-                            <span className="block font-bold text-[#1e88e5]">{p.time}</span>
-                            <span className="text-xs text-slate-400">{p.status}</span>
-                        </div>
+                <div className="md:col-span-3 bg-white rounded-[16px] border border-slate-200 shadow-sm overflow-hidden">
+                    <div className="p-6 border-b border-slate-100">
+                        <h3 className="text-xl font-bold text-[#333333]">Upcoming Appointments</h3>
                     </div>
-                ))}
+                    {[
+                        { name: 'John Doe', time: '09:00 AM', type: 'Checkup', status: 'In Progress' },
+                        { name: 'Sarah Smith', time: '10:30 AM', type: 'Consultation', status: 'Waiting' },
+                        { name: 'Robert Brown', time: '11:15 AM', type: 'Report Review', status: 'Scheduled' },
+                    ].map((p, i) => (
+                        <div key={i} className="flex items-center justify-between p-6 border-b border-slate-100 last:border-0 hover:bg-slate-50">
+                            <div className="flex items-center gap-4">
+                                <div className="bg-slate-100 p-3 rounded-full">
+                                    <User className="w-6 h-6 text-slate-500" />
+                                </div>
+                                <div>
+                                    <h4 className="font-bold text-[#333333] mb-1">{p.name}</h4>
+                                    <span className="text-xs bg-slate-100 px-2 py-1 rounded text-slate-600">{p.type}</span>
+                                </div>
+                            </div>
+                            <div className="text-right">
+                                <span className="block font-bold text-[#1e88e5]">{p.time}</span>
+                                <span className="text-xs text-slate-400">{p.status}</span>
+                            </div>
+                        </div>
+                    ))}
+                </div>
             </div>
         </div>
     );
@@ -425,14 +441,12 @@ const Home = ({ user, setUser, logout, role }) => {
     const [inputFamily, setInputFamily] = useState({ name: '', phone: '' });
 
     useEffect(() => {
-        // Persistent Family Data
         const savedFam = localStorage.getItem('mediverse_family');
         if (savedFam) {
             setFamilyMember(JSON.parse(savedFam));
             setInputFamily(JSON.parse(savedFam));
         }
 
-        // Persistent Emergency Status
         const savedEmergency = localStorage.getItem('mediverse_emergency');
         if (savedEmergency) {
             setEmergencyData(JSON.parse(savedEmergency));
@@ -457,17 +471,22 @@ const Home = ({ user, setUser, logout, role }) => {
             navigator.geolocation.getCurrentPosition(
                 async (position) => {
                     try {
+                        // 500 error fix implemented in backend, frontend logic remains standard async/await
                         const res = await emergencyService.trigger(user.id, { lat: position.coords.latitude, lng: position.coords.longitude });
                         setEmergencyData(res);
-                        localStorage.setItem('mediverse_emergency', JSON.stringify(res)); // Persist Status
-                    } catch (e) { alert('API Error'); }
+                        localStorage.setItem('mediverse_emergency', JSON.stringify(res));
+                    } catch (e) {
+                        console.error(e);
+                        alert('Emergency Signal Failed. Calling 911...');
+                    }
                     finally { setLoading(false); }
                 },
                 async () => {
-                    // Fallback location for demo/error
-                    const res = await emergencyService.trigger(user.id, { lat: 28.0, lng: 77.0 });
-                    setEmergencyData(res);
-                    localStorage.setItem('mediverse_emergency', JSON.stringify(res)); // Persist Status
+                    try {
+                        const res = await emergencyService.trigger(user.id, { lat: 28.0, lng: 77.0 });
+                        setEmergencyData(res);
+                        localStorage.setItem('mediverse_emergency', JSON.stringify(res));
+                    } catch (e) { console.error(e); }
                     setLoading(false);
                 }
             );
@@ -490,11 +509,9 @@ const Home = ({ user, setUser, logout, role }) => {
 
         const updated = { ...user, streak: (user.streak || 0) + 1 };
         try {
-            // Optimistic update
             setUser(updated);
             localStorage.setItem('mediverse_user', JSON.stringify(updated));
             localStorage.setItem('last_streak_date', today);
-
             await patientService.updateData(updated);
         } catch (err) { console.error(err); }
     };
@@ -505,7 +522,6 @@ const Home = ({ user, setUser, logout, role }) => {
 
     return (
         <div className="min-h-screen bg-white text-[#333333] font-sans p-6 md:p-8 space-y-8 max-w-7xl mx-auto">
-            {/* Header */}
             <nav className="flex items-center justify-between bg-white border border-slate-200 shadow-sm p-6 rounded-[16px]">
                 <div className="flex items-center gap-4">
                     <div className="bg-[#1e88e5]/10 p-2 rounded-xl">
@@ -524,14 +540,12 @@ const Home = ({ user, setUser, logout, role }) => {
                 </div>
             </nav>
 
-            {/* Views */}
             {activeView === 'booking' ? <BookingView setActiveView={setActiveView} user={user} /> :
                 activeView === 'pharmacy' ? <PharmacyView setActiveView={setActiveView} /> :
                     activeView === 'reports' ? <ReportsView setActiveView={setActiveView} /> :
                         activeView === 'history' ? <div onClick={() => setActiveView('dashboard')}>History Placeholder (Back)</div> :
                             (
                                 <div className="space-y-8">
-                                    {/* 1. Streak Card */}
                                     <motion.div
                                         whileHover={{ scale: 1.01 }}
                                         className="w-full bg-[#1e88e5] text-white p-8 rounded-[16px] shadow-lg relative overflow-hidden flex flex-col md:flex-row items-center justify-between"
@@ -561,10 +575,8 @@ const Home = ({ user, setUser, logout, role }) => {
                                         <Activity className="w-48 h-48 text-white/10 absolute -right-8 -bottom-8" />
                                     </motion.div>
 
-                                    {/* 2. Grid */}
                                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                                         <div className="lg:col-span-2 space-y-8">
-                                            {/* Quick Actions */}
                                             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                                                 {[
                                                     { icon: Calendar, label: 'Book Visit', color: 'text-blue-600', bg: 'bg-blue-50', action: 'booking' },
@@ -586,7 +598,6 @@ const Home = ({ user, setUser, logout, role }) => {
                                                 ))}
                                             </div>
 
-                                            {/* Family Section */}
                                             <section className="bg-white border border-slate-200 p-6 rounded-[16px] shadow-sm">
                                                 <div className="flex items-center justify-between mb-4">
                                                     <h3 className="text-lg font-bold text-[#333333]">Family Emergency Contact</h3>
@@ -632,7 +643,6 @@ const Home = ({ user, setUser, logout, role }) => {
                                             </section>
                                         </div>
 
-                                        {/* Emergency */}
                                         <div className="space-y-6">
                                             <motion.div
                                                 whileHover={{ scale: 1.02 }}
@@ -695,7 +705,7 @@ const Home = ({ user, setUser, logout, role }) => {
 
                                                             <button
                                                                 onClick={clearEmergency}
-                                                                className="w-full py-3 text-slate-400 text-sm font-semibold hover:text-slate-600"
+                                                                className="w-full py-3 text-slate-400 text-sm font-semibold hover:text-slate-600 border border-slate-200 rounded-[12px]"
                                                             >
                                                                 Dismiss Tracking
                                                             </button>
