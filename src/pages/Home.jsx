@@ -47,7 +47,19 @@ const BookingView = ({ setActiveView, user }) => {
                                 {hospitals.map(h => <option key={h} value={h}>{h}</option>)}
                             </select>
                         </div>
-                        {/* ... (Other fields remains same) ... */}
+                        <div className="space-y-2">
+                            <label className="text-sm font-semibold text-slate-600">Department</label>
+                            <select
+                                className="input-field w-full"
+                                value={booking.department}
+                                onChange={e => setBooking({ ...booking, department: e.target.value })}
+                            >
+                                <option>General Medicine</option>
+                                <option>Cardiology</option>
+                                <option>Orthopedics</option>
+                                <option>Pediatrics</option>
+                            </select>
+                        </div>
                         <div className="space-y-2">
                             <label className="text-sm font-semibold text-slate-600">Preferred Date</label>
                             <input
@@ -124,7 +136,6 @@ const PharmacyView = ({ setActiveView }) => {
 
     return (
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
-            {/* Header */}
             <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center gap-4">
                     <button onClick={() => viewMode === 'list' ? setActiveView('dashboard') : setViewMode('list')} className="p-2 hover:bg-slate-100 rounded-full transition-colors">
@@ -142,7 +153,6 @@ const PharmacyView = ({ setActiveView }) => {
                 )}
             </div>
 
-            {/* List View */}
             {viewMode === 'list' && (
                 <div className="bg-white p-6 rounded-[16px] border border-slate-200 shadow-sm">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -172,7 +182,6 @@ const PharmacyView = ({ setActiveView }) => {
                 </div>
             )}
 
-            {/* Cart View */}
             {viewMode === 'cart' && (
                 <div className="bg-white p-6 rounded-[16px] border border-slate-200 shadow-sm space-y-6">
                     {Object.values(cart).map((item, i) => (
@@ -192,7 +201,6 @@ const PharmacyView = ({ setActiveView }) => {
                 </div>
             )}
 
-            {/* Checkout View */}
             {viewMode === 'checkout' && (
                 <div className="bg-white p-6 rounded-[16px] border border-slate-200 shadow-sm space-y-6">
                     <div className="space-y-4">
@@ -226,7 +234,6 @@ const PharmacyView = ({ setActiveView }) => {
                 </div>
             )}
 
-            {/* Order Summary (Tracking) */}
             {viewMode === 'summary' && (
                 <motion.div initial={{ scale: 0.95 }} animate={{ scale: 1 }} className="bg-white p-8 rounded-[16px] border border-slate-200 shadow-md space-y-6">
                     <div className="flex items-center gap-4 text-green-600 mb-4">
@@ -310,6 +317,7 @@ const ReportsView = ({ setActiveView }) => {
 };
 
 const CalendarView = ({ onClose, streak }) => {
+    // Generate 30 days dynamically for demo users.
     const days = Array.from({ length: 30 }, (_, i) => i + 1);
 
     return (
@@ -327,13 +335,13 @@ const CalendarView = ({ onClose, streak }) => {
                     </div>
                 </div>
 
-                <div className="grid grid-cols-7 gap-2 mb-6">
+                <div className="grid grid-cols-7 gap-3 mb-6">
                     {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map(d => <span key={d} className="text-center text-xs font-bold text-slate-400">{d}</span>)}
                     {days.map(d => (
                         <div
                             key={d}
-                            className={`aspect-square rounded-full flex items-center justify-center text-sm font-bold 
-                                ${d <= streak ? 'bg-[#1e88e5] text-white' : 'bg-slate-100 text-slate-400'}`}
+                            className={`aspect-square rounded-full flex items-center justify-center text-sm font-bold transition-all
+                                ${d <= streak ? 'bg-[#1e88e5] text-white shadow-md' : 'bg-slate-100 text-slate-300'}`}
                         >
                             {d}
                         </div>
@@ -346,7 +354,6 @@ const CalendarView = ({ onClose, streak }) => {
     );
 };
 
-// --- Doctor Dashboard ---
 const DoctorDashboard = ({ user, logout }) => {
     return (
         <div className="min-h-screen bg-slate-50 p-6 md:p-8 font-sans text-[#333333] max-w-7xl mx-auto space-y-8">
@@ -361,9 +368,8 @@ const DoctorDashboard = ({ user, logout }) => {
                     <LogOut className="w-5 h-5 text-slate-500" />
                 </button>
             </nav>
-
+            {/* ... Dashboard Content ... */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                {/* Stats */}
                 <div className="bg-white p-6 rounded-[16px] shadow-sm border border-slate-200">
                     <h3 className="text-slate-500 text-sm font-semibold mb-2">Today's Patients</h3>
                     <span className="text-4xl font-bold text-[#333333]">12</span>
@@ -376,34 +382,34 @@ const DoctorDashboard = ({ user, logout }) => {
                     <h3 className="text-slate-500 text-sm font-semibold mb-2">Emergency Alerts</h3>
                     <span className="text-4xl font-bold text-red-500">2</span>
                 </div>
+            </div>
 
-                {/* Patient List */}
-                <div className="md:col-span-3 bg-white rounded-[16px] border border-slate-200 shadow-sm overflow-hidden">
-                    <div className="p-6 border-b border-slate-100">
-                        <h3 className="text-xl font-bold text-[#333333]">Upcoming Appointments</h3>
-                    </div>
-                    {[
-                        { name: 'John Doe', time: '09:00 AM', type: 'Checkup', status: 'In Progress' },
-                        { name: 'Sarah Smith', time: '10:30 AM', type: 'Consultation', status: 'Waiting' },
-                        { name: 'Robert Brown', time: '11:15 AM', type: 'Report Review', status: 'Scheduled' },
-                    ].map((p, i) => (
-                        <div key={i} className="flex items-center justify-between p-6 border-b border-slate-100 last:border-0 hover:bg-slate-50">
-                            <div className="flex items-center gap-4">
-                                <div className="bg-slate-100 p-3 rounded-full">
-                                    <User className="w-6 h-6 text-slate-500" />
-                                </div>
-                                <div>
-                                    <h4 className="font-bold text-[#333333] mb-1">{p.name}</h4>
-                                    <span className="text-xs bg-slate-100 px-2 py-1 rounded text-slate-600">{p.type}</span>
-                                </div>
+            {/* Patient List */}
+            <div className="md:col-span-3 bg-white rounded-[16px] border border-slate-200 shadow-sm overflow-hidden">
+                <div className="p-6 border-b border-slate-100">
+                    <h3 className="text-xl font-bold text-[#333333]">Upcoming Appointments</h3>
+                </div>
+                {[
+                    { name: 'John Doe', time: '09:00 AM', type: 'Checkup', status: 'In Progress' },
+                    { name: 'Sarah Smith', time: '10:30 AM', type: 'Consultation', status: 'Waiting' },
+                    { name: 'Robert Brown', time: '11:15 AM', type: 'Report Review', status: 'Scheduled' },
+                ].map((p, i) => (
+                    <div key={i} className="flex items-center justify-between p-6 border-b border-slate-100 last:border-0 hover:bg-slate-50">
+                        <div className="flex items-center gap-4">
+                            <div className="bg-slate-100 p-3 rounded-full">
+                                <User className="w-6 h-6 text-slate-500" />
                             </div>
-                            <div className="text-right">
-                                <span className="block font-bold text-[#1e88e5]">{p.time}</span>
-                                <span className="text-xs text-slate-400">{p.status}</span>
+                            <div>
+                                <h4 className="font-bold text-[#333333] mb-1">{p.name}</h4>
+                                <span className="text-xs bg-slate-100 px-2 py-1 rounded text-slate-600">{p.type}</span>
                             </div>
                         </div>
-                    ))}
-                </div>
+                        <div className="text-right">
+                            <span className="block font-bold text-[#1e88e5]">{p.time}</span>
+                            <span className="text-xs text-slate-400">{p.status}</span>
+                        </div>
+                    </div>
+                ))}
             </div>
         </div>
     );
@@ -419,10 +425,17 @@ const Home = ({ user, setUser, logout, role }) => {
     const [inputFamily, setInputFamily] = useState({ name: '', phone: '' });
 
     useEffect(() => {
+        // Persistent Family Data
         const savedFam = localStorage.getItem('mediverse_family');
         if (savedFam) {
             setFamilyMember(JSON.parse(savedFam));
             setInputFamily(JSON.parse(savedFam));
+        }
+
+        // Persistent Emergency Status
+        const savedEmergency = localStorage.getItem('mediverse_emergency');
+        if (savedEmergency) {
+            setEmergencyData(JSON.parse(savedEmergency));
         }
     }, []);
 
@@ -446,16 +459,24 @@ const Home = ({ user, setUser, logout, role }) => {
                     try {
                         const res = await emergencyService.trigger(user.id, { lat: position.coords.latitude, lng: position.coords.longitude });
                         setEmergencyData(res);
+                        localStorage.setItem('mediverse_emergency', JSON.stringify(res)); // Persist Status
                     } catch (e) { alert('API Error'); }
                     finally { setLoading(false); }
                 },
                 async () => {
+                    // Fallback location for demo/error
                     const res = await emergencyService.trigger(user.id, { lat: 28.0, lng: 77.0 });
                     setEmergencyData(res);
+                    localStorage.setItem('mediverse_emergency', JSON.stringify(res)); // Persist Status
                     setLoading(false);
                 }
             );
         } catch (err) { setLoading(false); }
+    };
+
+    const clearEmergency = () => {
+        setEmergencyData(null);
+        localStorage.removeItem('mediverse_emergency');
     };
 
     const updateStreak = async () => {
@@ -633,17 +654,61 @@ const Home = ({ user, setUser, logout, role }) => {
                                                     </button>
                                                 </div>
                                             </motion.div>
+
+                                            <AnimatePresence>
+                                                {emergencyData && (
+                                                    <motion.div
+                                                        initial={{ opacity: 0, y: 20 }}
+                                                        animate={{ opacity: 1, y: 0 }}
+                                                        exit={{ opacity: 0, y: 20 }}
+                                                        className="bg-white border-2 border-[#1e88e5] p-6 rounded-[16px] shadow-xl"
+                                                    >
+                                                        <div className="flex items-center gap-3 mb-4">
+                                                            <div className="bg-blue-50 p-2 rounded-lg">
+                                                                <Ambulance className="w-6 h-6 text-[#1e88e5]" />
+                                                            </div>
+                                                            <div>
+                                                                <h4 className="font-bold text-[#333333]">Ambulance En Route</h4>
+                                                                <span className="text-xs text-slate-500">Tracking ID: #{emergencyData.requestId || 'SOS-8892'}</span>
+                                                            </div>
+                                                        </div>
+
+                                                        <div className="space-y-4">
+                                                            <div className="flex justify-between items-end">
+                                                                <span className="text-slate-500 text-sm">Estimated Arrival</span>
+                                                                <span className="text-2xl font-bold text-[#1e88e5]">{emergencyData.ambulance.eta}</span>
+                                                            </div>
+                                                            <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+                                                                <div className="bg-[#1e88e5] h-full w-[60%] animate-pulse"></div>
+                                                            </div>
+
+                                                            <div className="bg-slate-50 p-4 rounded-[12px] space-y-2">
+                                                                <div className="flex items-center gap-3 text-sm">
+                                                                    <MapPin className="w-4 h-4 text-slate-400" />
+                                                                    <span className="font-medium">{emergencyData.hospital.name}</span>
+                                                                </div>
+                                                                <div className="flex items-center gap-3 text-sm">
+                                                                    <User className="w-4 h-4 text-slate-400" />
+                                                                    <span>Driver: {emergencyData.ambulance.driver_name}</span>
+                                                                </div>
+                                                            </div>
+
+                                                            <button
+                                                                onClick={clearEmergency}
+                                                                className="w-full py-3 text-slate-400 text-sm font-semibold hover:text-slate-600"
+                                                            >
+                                                                Dismiss Tracking
+                                                            </button>
+                                                        </div>
+                                                    </motion.div>
+                                                )}
+                                            </AnimatePresence>
                                         </div>
                                     </div>
                                 </div>
                             )}
 
             {showCalendar && <CalendarView onClose={() => setShowCalendar(false)} streak={user?.streak || 0} />}
-            <AnimatePresence>
-                {emergencyData && (
-                    <CalendarView /> /* Using CalendarView as placeholder or similar modal logic for emergency if needed, but keeping separate logic in real code */
-                )}
-            </AnimatePresence>
         </div>
     );
 };
