@@ -1,44 +1,37 @@
 import axios from 'axios';
-import { io } from 'socket.io-client';
 
-const API_BASE_URL = "mediverse-backend-production.up.railway.app";
-
-const api = axios.create({
-    baseURL: API_BASE_URL,
-    headers: {
-        'Content-Type': 'application/json',
-    },
+// 1. Set your live Railway URL as the base
+const API = axios.create({
+    baseURL: 'https://mediverse-backend-production.up.railway.app/api'
 });
 
-export const socket = io(API_BASE_URL);
-
 export const authService = {
-    loginPatient: async (credentials) => {
-        const { data } = await api.post('/api/auth/login/patient', credentials);
-        return data;
+    // 2. Ensure the path matches your server.js: /auth/login/patient
+    loginPatient: async (data) => {
+        const res = await API.post('/auth/login/patient', data);
+        return res.data;
     },
-    registerPatient: async (userData) => {
-        const { data } = await api.post('/api/auth/register/patient', userData);
-        return data;
-    },
-    loginDoctor: async (credentials) => {
-        const { data } = await api.post('/api/auth/login/doctor', credentials);
-        return data;
-    },
+    registerPatient: async (data) => {
+        const res = await API.post('/auth/register/patient', data);
+        return res.data;
+    }
 };
 
 export const patientService = {
-    updateData: async (userData) => {
-        const { data } = await api.post('/api/patient/update', userData);
-        return data;
-    },
+    updateData: async (data) => {
+        const res = await API.post('/patient/update', data);
+        return res.data;
+    }
 };
 
 export const emergencyService = {
-    trigger: async (patientId, gps) => {
-        const { data } = await api.post('/api/emergency/trigger', { patientId, gps });
-        return data;
-    },
+    trigger: async (userId, location) => {
+        const res = await API.post('/emergency/trigger', { userId, location });
+        return res.data;
+    }
 };
 
-export default api;
+export const socket = {
+    // If you use sockets, they usually connect to the root URL, not /api
+    url: 'https://mediverse-backend-production.up.railway.app'
+};
