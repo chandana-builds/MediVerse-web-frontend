@@ -858,7 +858,7 @@ const Home = ({ user, setUser, logout, role }) => {
                                                         <div className="space-y-4">
                                                             <div className="flex justify-between items-end">
                                                                 <span className="text-slate-400 text-sm">Estimated Arrival</span>
-                                                                <span className="text-2xl font-bold text-[#1e88e5]">{emergencyData.ambulance.eta}</span>
+                                                                <span className="text-2xl font-bold text-[#1e88e5]">{emergencyData.ambulance?.eta || '12 mins'}</span>
                                                             </div>
                                                             <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
                                                                 <div className="bg-[#1e88e5] h-full w-[60%] animate-pulse"></div>
@@ -867,11 +867,11 @@ const Home = ({ user, setUser, logout, role }) => {
                                                             <div className="bg-slate-50 p-4 rounded-[20px] space-y-2">
                                                                 <div className="flex items-center gap-3 text-sm">
                                                                     <MapPin className="w-4 h-4 text-slate-400" />
-                                                                    <span className="font-medium text-slate-600">{emergencyData.hospital.name}</span>
+                                                                    <span className="font-medium text-slate-600">{emergencyData.hospital?.name || 'City Hospital'}</span>
                                                                 </div>
                                                                 <div className="flex items-center gap-3 text-sm">
                                                                     <User className="w-4 h-4 text-slate-400" />
-                                                                    <span className="text-slate-600">Driver: {emergencyData.ambulance.driver_name}</span>
+                                                                    <span className="text-slate-600">Driver: {emergencyData.ambulance?.driver_name || 'Assigned Driver'}</span>
                                                                 </div>
                                                             </div>
 
