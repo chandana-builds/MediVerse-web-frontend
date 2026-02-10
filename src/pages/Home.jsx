@@ -4,7 +4,7 @@ import {
     Heart, Activity, Calendar, Plus, PhoneCall,
     History, User, AlertTriangle, Ambulance,
     ShieldCheck, MapPin, Clock, LogOut, ArrowLeft, Search, Pill, ShoppingCart, CheckCircle, CreditCard, Truck, Camera, Edit2,
-    Utensils, Dumbbell, Sun, ChevronRight, ChevronLeft
+    Utensils, Dumbbell, Sun, ChevronRight, ChevronLeft, Package, FileText, Upload
 } from 'lucide-react';
 import { emergencyService, patientService } from '../services/api';
 
@@ -78,8 +78,8 @@ const BookingView = ({ setActiveView, user }) => {
                                         key={slot}
                                         onClick={() => setBooking({ ...booking, slot })}
                                         className={`py-3 px-4 rounded-[16px] text-sm font-bold transition-all ${booking.slot === slot
-                                                ? 'bg-[#1e88e5] text-white shadow-md shadow-blue-200'
-                                                : 'bg-slate-50 text-slate-500 hover:bg-slate-100'
+                                            ? 'bg-[#1e88e5] text-white shadow-md shadow-blue-200'
+                                            : 'bg-slate-50 text-slate-500 hover:bg-slate-100'
                                             }`}
                                     >
                                         {slot}
@@ -127,16 +127,55 @@ const BookingView = ({ setActiveView, user }) => {
     );
 };
 
+// --- Pharmacy Components ---
+
+const OrderTracking = ({ setActiveView }) => {
+    const steps = [
+        { status: 'Order Placed', time: '10:30 AM', active: true, icon: CheckCircle },
+        { status: 'Packed', time: '11:45 AM', active: true, icon: Package },
+        { status: 'Shipped', time: '02:15 PM', active: false, icon: Truck },
+        { status: 'Delivered', time: 'Estimated 05:00 PM', active: false, icon: MapPin },
+    ];
+
+    return (
+        <div className="space-y-6">
+            <div className="bg-white p-8 rounded-[24px] border border-slate-100 shadow-sm">
+                <h3 className="text-xl font-bold text-slate-700 mb-6">Track Order #MED-8892</h3>
+                <div className="relative space-y-8 pl-8 border-l-2 border-slate-100 ml-4">
+                    {steps.map((step, i) => (
+                        <div key={i} className="relative">
+                            <div className={`absolute -left-[41px] w-10 h-10 rounded-full flex items-center justify-center border-4 border-white shadow-sm ${step.active ? 'bg-[#1e88e5] text-white' : 'bg-slate-100 text-slate-400'}`}>
+                                <step.icon className="w-5 h-5" />
+                            </div>
+                            <div>
+                                <h4 className={`font-bold ${step.active ? 'text-slate-700' : 'text-slate-400'}`}>{step.status}</h4>
+                                <p className="text-xs text-slate-400">{step.time}</p>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            </div>
+            <button onClick={() => setActiveView('dashboard')} className="w-full py-4 text-[#1e88e5] font-bold hover:bg-blue-50 rounded-[16px] transition-colors">
+                Back to Home
+            </button>
+        </div>
+    );
+};
+
 const PharmacyView = ({ setActiveView }) => {
-    const [viewMode, setViewMode] = useState('list');
+    const [viewMode, setViewMode] = useState('list'); // list, cart, checkout, payment, tracking
     const [cart, setCart] = useState({});
-    const [shipping, setShipping] = useState({ address: '', payment: 'cod' });
+    const [shipping, setShipping] = useState({ name: '', address: '', city: '', zip: '', phone: '' });
+    const [paymentMethod, setPaymentMethod] = useState('cod'); // cod, card
+    const [cardDetails, setCardDetails] = useState({ number: '', expiry: '', cvv: '', name: '' });
 
     const meds = [
         { name: 'Paracetamol 500mg', brand: 'Dolo', price: 30 },
         { name: 'Vitamin C', brand: 'Limcee', price: 25 },
         { name: 'Cough Syrup', brand: 'Benadryl', price: 120 },
         { name: 'Amoxicillin', brand: 'Mox', price: 85 },
+        { name: 'Pain Relief Gel', brand: 'Volini', price: 150 },
+        { name: 'Bandages', brand: 'Hansaplast', price: 10 },
     ];
 
     const addToCart = (med) => {
@@ -144,16 +183,47 @@ const PharmacyView = ({ setActiveView }) => {
     };
 
     const cartTotal = Object.values(cart).reduce((sum, item) => sum + (item.price * item.qty), 0);
+    const tax = Math.round(cartTotal * 0.18);
+    const shippingCost = cartTotal > 500 ? 0 : 40;
+    const finalTotal = cartTotal + tax + shippingCost;
+
+    const handleCheckout = () => {
+        if (!shipping.name || !shipping.address || !shipping.city || !shipping.zip || !shipping.phone) {
+            alert("Please fill all shipping details.");
+            return;
+        }
+        setViewMode('payment');
+    };
+
+    const handlePayment = () => {
+        if (paymentMethod === 'card') {
+            if (!cardDetails.number || !cardDetails.expiry || !cardDetails.cvv || !cardDetails.name) {
+                alert("Please enter card details.");
+                return;
+            }
+        }
+        // Simulate processing
+        setTimeout(() => setViewMode('tracking'), 1500);
+    };
+
+    if (viewMode === 'tracking') return <OrderTracking setActiveView={setActiveView} />;
 
     return (
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
             <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center gap-4">
-                    <button onClick={() => viewMode === 'list' ? setActiveView('dashboard') : setViewMode('list')} className="p-2 hover:bg-slate-50 rounded-full transition-colors">
+                    <button onClick={() => {
+                        if (viewMode === 'list') setActiveView('dashboard');
+                        else if (viewMode === 'cart') setViewMode('list');
+                        else if (viewMode === 'checkout') setViewMode('cart');
+                        else if (viewMode === 'payment') setViewMode('checkout');
+                    }} className="p-2 hover:bg-slate-50 rounded-full transition-colors">
                         <ArrowLeft className="w-6 h-6 text-[#1e88e5]" />
                     </button>
                     <h2 className="text-2xl font-bold text-[#1e88e5]">
-                        {viewMode === 'list' ? 'Online Pharmacy' : viewMode === 'cart' ? 'Your Cart' : 'Checkout'}
+                        {viewMode === 'list' ? 'Online Pharmacy' :
+                            viewMode === 'cart' ? 'Your Cart' :
+                                viewMode === 'checkout' ? 'Shipping Details' : 'Payment'}
                     </h2>
                 </div>
                 {viewMode === 'list' && (
@@ -195,124 +265,272 @@ const PharmacyView = ({ setActiveView }) => {
 
             {viewMode === 'cart' && (
                 <div className="bg-white p-6 rounded-[24px] border border-slate-100 shadow-sm space-y-6">
-                    {Object.values(cart).map((item, i) => (
-                        <div key={i} className="flex justify-between items-center border-b border-slate-50 pb-4">
-                            <div>
-                                <h4 className="font-bold text-slate-700">{item.name}</h4>
-                                <span className="text-sm text-slate-400">₹{item.price} x {item.qty}</span>
+                    {Object.values(cart).length === 0 ? (
+                        <div className="text-center py-12">
+                            <ShoppingCart className="w-16 h-16 text-slate-200 mx-auto mb-4" />
+                            <p className="text-slate-400">Your cart is empty.</p>
+                        </div>
+                    ) : (
+                        Object.values(cart).map((item, i) => (
+                            <div key={i} className="flex justify-between items-center border-b border-slate-50 pb-4">
+                                <div>
+                                    <h4 className="font-bold text-slate-700">{item.name}</h4>
+                                    <span className="text-sm text-slate-400">₹{item.price} x {item.qty}</span>
+                                </div>
+                                <span className="font-bold text-[#1e88e5]">₹{item.price * item.qty}</span>
                             </div>
-                            <span className="font-bold text-[#1e88e5]">₹{item.price * item.qty}</span>
+                        ))
+                    )}
+                    {Object.values(cart).length > 0 && (
+                        <>
+                            <div className="space-y-2 pt-4">
+                                <div className="flex justify-between text-slate-500 text-sm"><span>Subtotal</span><span>₹{cartTotal}</span></div>
+                                <div className="flex justify-between text-slate-500 text-sm"><span>Tax (18%)</span><span>₹{tax}</span></div>
+                                <div className="flex justify-between text-slate-500 text-sm"><span>Shipping</span><span>{shippingCost === 0 ? 'Free' : `₹${shippingCost}`}</span></div>
+                                <div className="flex justify-between text-xl font-bold pt-2 border-t border-slate-50">
+                                    <span>Total</span>
+                                    <span className="text-[#1e88e5]">₹{finalTotal}</span>
+                                </div>
+                            </div>
+                            <button onClick={() => setViewMode('checkout')} className="w-full btn-primary py-4 bg-[#1e88e5] text-white rounded-[16px] shadow-lg shadow-blue-200">Proceed to Buy</button>
+                        </>
+                    )}
+                </div>
+            )}
+
+            {viewMode === 'checkout' && (
+                <div className="bg-white p-8 rounded-[24px] border border-slate-100 shadow-sm space-y-6">
+                    <h3 className="font-bold text-slate-700 mb-4">Shipping Address</h3>
+                    <div className="space-y-4">
+                        <input
+                            className="input-field w-full border-slate-200 focus:border-[#1e88e5] focus:ring-[#1e88e5]/20 rounded-[12px]"
+                            placeholder="Full Name"
+                            value={shipping.name}
+                            onChange={e => setShipping({ ...shipping, name: e.target.value })}
+                        />
+                        <input
+                            className="input-field w-full border-slate-200 focus:border-[#1e88e5] focus:ring-[#1e88e5]/20 rounded-[12px]"
+                            placeholder="Address Line 1"
+                            value={shipping.address}
+                            onChange={e => setShipping({ ...shipping, address: e.target.value })}
+                        />
+                        <div className="grid grid-cols-2 gap-4">
+                            <input
+                                className="input-field border-slate-200 focus:border-[#1e88e5] focus:ring-[#1e88e5]/20 rounded-[12px]"
+                                placeholder="City"
+                                value={shipping.city}
+                                onChange={e => setShipping({ ...shipping, city: e.target.value })}
+                            />
+                            <input
+                                className="input-field border-slate-200 focus:border-[#1e88e5] focus:ring-[#1e88e5]/20 rounded-[12px]"
+                                placeholder="ZIP Code"
+                                value={shipping.zip}
+                                onChange={e => setShipping({ ...shipping, zip: e.target.value })}
+                            />
+                        </div>
+                        <input
+                            className="input-field w-full border-slate-200 focus:border-[#1e88e5] focus:ring-[#1e88e5]/20 rounded-[12px]"
+                            placeholder="Phone Number"
+                            value={shipping.phone}
+                            onChange={e => setShipping({ ...shipping, phone: e.target.value })}
+                        />
+                    </div>
+                    <button onClick={handleCheckout} className="w-full btn-primary py-4 bg-[#1e88e5] text-white rounded-[16px] shadow-lg shadow-blue-200">
+                        Continue to Payment
+                    </button>
+                </div>
+            )}
+
+            {viewMode === 'payment' && (
+                <div className="bg-white p-8 rounded-[24px] border border-slate-100 shadow-sm space-y-6">
+                    <h3 className="font-bold text-slate-700 mb-4">Payment Method</h3>
+
+                    <div className="grid grid-cols-2 gap-4 mb-6">
+                        <button
+                            onClick={() => setPaymentMethod('cod')}
+                            className={`p-4 rounded-[16px] border text-center font-bold transition-all ${paymentMethod === 'cod' ? 'border-[#1e88e5] bg-blue-50 text-[#1e88e5]' : 'border-slate-100 text-slate-400'}`}
+                        >
+                            Cash on Delivery
+                        </button>
+                        <button
+                            onClick={() => setPaymentMethod('card')}
+                            className={`p-4 rounded-[16px] border text-center font-bold transition-all ${paymentMethod === 'card' ? 'border-[#1e88e5] bg-blue-50 text-[#1e88e5]' : 'border-slate-100 text-slate-400'}`}
+                        >
+                            Credit/Debit Card
+                        </button>
+                    </div>
+
+                    {paymentMethod === 'card' && (
+                        <div className="space-y-4 bg-slate-50 p-6 rounded-[20px] border border-slate-100">
+                            <div className="flex items-center gap-2 mb-2 text-[#1e88e5]">
+                                <CreditCard className="w-5 h-5" />
+                                <span className="font-bold text-sm">Card Details</span>
+                            </div>
+                            <input
+                                className="input-field w-full border-slate-200 rounded-[12px]"
+                                placeholder="Card Number"
+                                value={cardDetails.number}
+                                onChange={e => setCardDetails({ ...cardDetails, number: e.target.value })}
+                            />
+                            <div className="grid grid-cols-2 gap-4">
+                                <input
+                                    className="input-field border-slate-200 rounded-[12px]"
+                                    placeholder="MM/YY"
+                                    value={cardDetails.expiry}
+                                    onChange={e => setCardDetails({ ...cardDetails, expiry: e.target.value })}
+                                />
+                                <input
+                                    className="input-field border-slate-200 rounded-[12px]"
+                                    placeholder="CVV"
+                                    type="password"
+                                    value={cardDetails.cvv}
+                                    onChange={e => setCardDetails({ ...cardDetails, cvv: e.target.value })}
+                                />
+                            </div>
+                            <input
+                                className="input-field w-full border-slate-200 rounded-[12px]"
+                                placeholder="Cardholder Name"
+                                value={cardDetails.name}
+                                onChange={e => setCardDetails({ ...cardDetails, name: e.target.value })}
+                            />
+                        </div>
+                    )}
+
+                    <div className="border-t border-slate-50 pt-4">
+                        <div className="flex justify-between items-center mb-6">
+                            <span className="text-slate-500 font-medium">Total Amount</span>
+                            <span className="text-2xl font-bold text-[#1e88e5]">₹{finalTotal}</span>
+                        </div>
+                        <button onClick={handlePayment} className="w-full btn-primary py-4 bg-[#1e88e5] text-white rounded-[16px] shadow-lg shadow-blue-200">
+                            Pay & Place Order
+                        </button>
+                    </div>
+                </div>
+            )}
+        </motion.div>
+    );
+};
+
+// --- Reports Component ---
+const ReportsView = ({ setActiveView }) => {
+    const [file, setFile] = useState(null);
+    const [preview, setPreview] = useState(null);
+    const [analyzing, setAnalyzing] = useState(false);
+    const [result, setResult] = useState(null);
+
+    const handleFileChange = (e) => {
+        const selected = e.target.files[0];
+        if (selected) {
+            setFile(selected);
+            setPreview(URL.createObjectURL(selected));
+            setResult(null);
+        }
+    };
+
+    const handleUpload = () => {
+        if (!file) return;
+        setAnalyzing(true);
+        // Simulate upload and analysis
+        setTimeout(() => {
+            setAnalyzing(false);
+            setResult({
+                status: 'Normal',
+                summary: 'All vital parameters appear to be within healthy ranges. No anomalies detected.',
+                date: new Date().toLocaleDateString()
+            });
+        }, 2000);
+    };
+
+    return (
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
+            <div className="flex items-center gap-4 mb-6">
+                <button onClick={() => setActiveView('dashboard')} className="p-2 hover:bg-slate-50 rounded-full transition-colors">
+                    <ArrowLeft className="w-6 h-6 text-[#1e88e5]" />
+                </button>
+                <h2 className="text-2xl font-bold text-[#1e88e5]">Lab Reports</h2>
+            </div>
+
+            <div className="bg-white p-8 rounded-[24px] border border-slate-100 shadow-sm text-center">
+                {!preview ? (
+                    <div className="border-2 border-dashed border-slate-200 rounded-[20px] p-12 flex flex-col items-center gap-4 hover:border-[#1e88e5] hover:bg-blue-50/50 transition-all cursor-pointer relative">
+                        <input
+                            type="file"
+                            accept="image/*"
+                            onChange={handleFileChange}
+                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                        />
+                        <div className="bg-blue-50 p-4 rounded-full">
+                            <Camera className="w-8 h-8 text-[#1e88e5]" />
+                        </div>
+                        <div>
+                            <p className="font-bold text-slate-700">Tap to Upload Report</p>
+                            <p className="text-sm text-slate-400">Supports JPG, PNG (Max 5MB)</p>
+                        </div>
+                    </div>
+                ) : (
+                    <div className="space-y-6">
+                        <div className="relative rounded-[20px] overflow-hidden border border-slate-100 shadow-sm max-h-64">
+                            <img src={preview} alt="Report Preview" className="w-full object-cover" />
+                            <button onClick={() => setPreview(null)} className="absolute top-2 right-2 bg-black/50 text-white p-2 rounded-full hover:bg-black/70">
+                                <Plus className="rotate-45 w-5 h-5" />
+                            </button>
+                        </div>
+
+                        {!result && (
+                            <button
+                                onClick={handleUpload}
+                                disabled={analyzing}
+                                className="w-full btn-primary py-4 bg-[#1e88e5] text-white rounded-[16px] shadow-lg shadow-blue-200 flex items-center justify-center gap-2"
+                            >
+                                {analyzing ? 'Analyzing...' : (
+                                    <>
+                                        <Upload className="w-5 h-5" />
+                                        Analyze Report
+                                    </>
+                                )}
+                            </button>
+                        )}
+                    </div>
+                )}
+
+                {result && (
+                    <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="mt-8 bg-green-50 border border-green-100 p-6 rounded-[20px] text-left">
+                        <div className="flex items-center gap-2 mb-2">
+                            <CheckCircle className="w-6 h-6 text-green-600" />
+                            <h3 className="text-lg font-bold text-green-700">Analysis Complete</h3>
+                        </div>
+                        <div className="bg-white p-4 rounded-[16px] text-sm text-slate-600 border border-green-100">
+                            <p className="font-bold mb-1">Result: {result.status}</p>
+                            <p>{result.summary}</p>
+                            <p className="text-xs text-slate-400 mt-2">Analyzed on {result.date}</p>
+                        </div>
+                    </motion.div>
+                )}
+            </div>
+
+            <div className="bg-white p-6 rounded-[24px] border border-slate-100 shadow-sm">
+                <h3 className="font-bold text-slate-700 mb-4">Past Reports</h3>
+                <div className="space-y-3">
+                    {[1, 2].map((i) => (
+                        <div key={i} className="flex items-center justify-between p-4 bg-slate-50 rounded-[16px] border border-slate-100">
+                            <div className="flex items-center gap-3">
+                                <div className="bg-white p-2 rounded-full">
+                                    <FileText className="w-5 h-5 text-slate-400" />
+                                </div>
+                                <div className="text-left">
+                                    <p className="font-bold text-slate-700">Blood Test Report</p>
+                                    <p className="text-xs text-slate-400">Uploaded 2 days ago</p>
+                                </div>
+                            </div>
+                            <button className="text-[#1e88e5] text-sm font-bold">View</button>
                         </div>
                     ))}
-                    <div className="flex justify-between items-center text-xl font-bold pt-4">
-                        <span>Total:</span>
-                        <span className="text-[#1e88e5]">₹{cartTotal}</span>
-                    </div>
-                    <button onClick={() => setViewMode('checkout')} className="w-full btn-primary py-4 bg-[#1e88e5] text-white rounded-[16px] shadow-lg shadow-blue-200">Proceed to Buy</button>
                 </div>
-            )}
-            {/* Checkout View Simplified */}
-            {viewMode === 'checkout' && (
-                <div className="text-center p-8 bg-blue-50 rounded-[24px]">
-                    <h3 className="text-xl font-bold text-[#1e88e5]">Checkout Flow Placeholder</h3>
-                    <button onClick={() => setViewMode('summary')} className="mt-4 bg-[#1e88e5] text-white px-6 py-3 rounded-[16px]">Confirm (Demo)</button>
-                </div>
-            )}
-            {viewMode === 'summary' && (
-                <div className="text-center p-8 bg-green-50 rounded-[24px]">
-                    <h3 className="text-xl font-bold text-green-600">Order Confirmed!</h3>
-                    <button onClick={() => setActiveView('dashboard')} className="mt-4 text-green-700 font-bold underline">Home</button>
-                </div>
-            )}
-        </motion.div>
-    );
-};
-
-const ReportsView = ({ setActiveView }) => {
-    return (
-        <div className="bg-white p-8 rounded-[24px] border border-slate-100 shadow-sm text-center">
-            <h2 className="text-2xl font-bold text-[#1e88e5] mb-4">Lab Reports</h2>
-            <div className="border-2 border-dashed border-slate-200 rounded-[16px] p-12 flex flex-col items-center gap-4">
-                <Camera className="w-12 h-12 text-slate-300" />
-                <p className="text-slate-400">Upload feature coming soon.</p>
             </div>
-            <button onClick={() => setActiveView('dashboard')} className="mt-6 text-[#1e88e5] font-bold">Back</button>
-        </div>
-    );
-};
-
-
-const CalendarView = ({ onClose, streak }) => {
-    const now = new Date();
-    const currentMonth = now.toLocaleString('default', { month: 'long' });
-    const year = now.getFullYear();
-    const daysInMonth = new Date(year, now.getMonth() + 1, 0).getDate();
-    const startDay = new Date(year, now.getMonth(), 1).getDay();
-
-    // Generate array for grid: empty slots for startDay + days
-    const gridSlots = Array(startDay).fill(null).concat(Array.from({ length: daysInMonth }, (_, i) => i + 1));
-
-    return (
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="fixed inset-0 bg-slate-900/20 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-            <motion.div initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} className="bg-white rounded-[32px] p-8 max-w-md w-full shadow-2xl border border-white/50">
-                <div className="flex justify-between items-center mb-8">
-                    <div>
-                        <h3 className="text-2xl font-bold text-[#1e88e5]">My Progress</h3>
-                        <p className="text-slate-400 text-sm font-medium">Keep it up!</p>
-                    </div>
-                    <button onClick={onClose} className="p-2 hover:bg-slate-50 rounded-full text-slate-400 transition-colors">✕</button>
-                </div>
-
-                <div className="flex items-center justify-between mb-6 px-2">
-                    <button className="p-2 hover:bg-slate-50 rounded-full text-slate-400"><ChevronLeft className="w-5 h-5" /></button>
-                    <span className="text-lg font-bold text-slate-700">{currentMonth} {year}</span>
-                    <button className="p-2 hover:bg-slate-50 rounded-full text-slate-400"><ChevronRight className="w-5 h-5" /></button>
-                </div>
-
-                {/* Professional Calendar Grid - Circular Style */}
-                <div className="mb-8">
-                    {/* Weekday Headers */}
-                    <div className="grid grid-cols-7 mb-4">
-                        {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map(d => (
-                            <div key={d} className="text-center text-xs font-bold text-slate-400">{d}</div>
-                        ))}
-                    </div>
-                    {/* Days */}
-                    <div className="grid grid-cols-7 gap-y-4 gap-x-2">
-                        {gridSlots.map((d, i) => (
-                            <div key={i} className="flex flex-col items-center justify-center gap-1">
-                                {d ? (
-                                    <>
-                                        <div
-                                            className={`w-10 h-10 flex items-center justify-center rounded-full text-sm font-semibold transition-all
-                                                ${d <= streak
-                                                    ? 'bg-[#1e88e5] text-white shadow-md shadow-blue-200'
-                                                    : 'bg-slate-50 text-slate-400 hover:bg-slate-100'}`}
-                                        >
-                                            {d}
-                                        </div>
-                                    </>
-                                ) : (
-                                    <div className="w-10 h-10"></div> // Spacer
-                                )}
-                            </div>
-                        ))}
-                    </div>
-                </div>
-
-                <div className="bg-slate-50 p-4 rounded-[20px] flex items-center gap-4">
-                    <div className="bg-[#1e88e5] p-3 rounded-full text-white">
-                        <Activity className="w-6 h-6" />
-                    </div>
-                    <div>
-                        <span className="block text-2xl font-bold text-slate-700">{streak} Days</span>
-                        <span className="text-xs text-slate-400 font-bold uppercase tracking-wider">Current Streak</span>
-                    </div>
-                </div>
-            </motion.div>
         </motion.div>
     );
 };
+
 
 const HealthyTipsView = () => {
     const tips = [
@@ -407,12 +625,13 @@ const DoctorDashboard = ({ user, logout }) => {
     );
 };
 
+// --- Main Home Component ---
+
 const Home = ({ user, setUser, logout, role }) => {
     const [emergencyData, setEmergencyData] = useState(null);
     const [loading, setLoading] = useState(false);
     const [activeView, setActiveView] = useState('dashboard');
     const [familyMember, setFamilyMember] = useState(null);
-    const [showCalendar, setShowCalendar] = useState(false);
     const [editFamily, setEditFamily] = useState(false);
     const [inputFamily, setInputFamily] = useState({ name: '', phone: '' });
 
@@ -455,7 +674,7 @@ const Home = ({ user, setUser, logout, role }) => {
                         localStorage.setItem('mediverse_emergency', JSON.stringify(res));
                     } catch (e) {
                         console.error("Emergency API Error:", e);
-                        alert('Emergency Signal Failed. Calling 911...');
+                        alert('Emergency Signal Failed. If using Production, please verify backend deployment. Calling 911...');
                     }
                     finally { setLoading(false); }
                 },
@@ -481,24 +700,6 @@ const Home = ({ user, setUser, logout, role }) => {
     const clearEmergency = () => {
         setEmergencyData(null);
         localStorage.removeItem('mediverse_emergency');
-    };
-
-    const updateStreak = async () => {
-        const lastDate = localStorage.getItem('last_streak_date');
-        const today = new Date().toISOString().split('T')[0];
-
-        if (lastDate === today) {
-            alert("You have already marked your dose for today!");
-            return;
-        }
-
-        const updated = { ...user, streak: (user.streak || 0) + 1 };
-        try {
-            setUser(updated);
-            localStorage.setItem('mediverse_user', JSON.stringify(updated));
-            localStorage.setItem('last_streak_date', today);
-            await patientService.updateData(updated);
-        } catch (err) { console.error(err); }
     };
 
     if (role === 'doctor') {
@@ -531,34 +732,7 @@ const Home = ({ user, setUser, logout, role }) => {
                         activeView === 'history' ? <div onClick={() => setActiveView('dashboard')}>History Placeholder (Back)</div> :
                             (
                                 <div className="space-y-8">
-                                    <motion.div
-                                        whileHover={{ scale: 1.01 }}
-                                        className="w-full bg-[#1e88e5] text-white p-8 rounded-[24px] shadow-lg shadow-blue-200 relative overflow-hidden flex flex-col md:flex-row items-center justify-between"
-                                    >
-                                        <div className="relative z-10 space-y-4">
-                                            <div>
-                                                <p className="text-blue-100 font-medium mb-1">Daily Health Streak</p>
-                                                <h1 className="text-5xl font-bold mb-2">{user?.streak || 0} Days</h1>
-                                                <p className="text-blue-100 text-sm">Keep going! Consistency is key.</p>
-                                            </div>
-                                            <div className="flex gap-4">
-                                                <button
-                                                    onClick={updateStreak}
-                                                    className="bg-white text-[#1e88e5] px-6 py-3 rounded-[16px] font-bold flex items-center gap-2 hover:bg-blue-50 transition-colors shadow-md"
-                                                >
-                                                    <ShieldCheck className="w-5 h-5" />
-                                                    Mark Today
-                                                </button>
-                                                <button
-                                                    onClick={() => setShowCalendar(true)}
-                                                    className="bg-[#1565c0] text-white px-6 py-3 rounded-[16px] font-bold hover:bg-[#0d47a1] transition-colors"
-                                                >
-                                                    My Progress
-                                                </button>
-                                            </div>
-                                        </div>
-                                        <Activity className="w-48 h-48 text-white/10 absolute -right-8 -bottom-8" />
-                                    </motion.div>
+                                    {/* Removed Streak UI */}
 
                                     {/* Healthy Tips Section */}
                                     <div>
@@ -708,8 +882,6 @@ const Home = ({ user, setUser, logout, role }) => {
                                     </div>
                                 </div>
                             )}
-
-            {showCalendar && <CalendarView onClose={() => setShowCalendar(false)} streak={user?.streak || 0} />}
         </div>
     );
 };
