@@ -2,6 +2,7 @@ import axios from 'axios';
 
 // 1. Set your live Railway URL as the base
 const API = axios.create({
+    //baseURL: 'http://localhost:5000/api'
     baseURL: 'https://mediverse-backend-production.up.railway.app/api'
 });
 
