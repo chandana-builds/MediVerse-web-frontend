@@ -1,97 +1,256 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     Heart, Activity, Calendar, Plus, PhoneCall,
     History, User, AlertTriangle, Ambulance,
-    ShieldCheck, MapPin, Clock, LogOut, ArrowLeft, Search, Pill
+    ShieldCheck, MapPin, Clock, LogOut, ArrowLeft, Search, Pill, ShoppingCart, CheckCircle
 } from 'lucide-react';
 import { emergencyService, patientService } from '../services/api';
 
-// --- Sub-Views (Defined outside to prevent re-renders) ---
-const BookingView = ({ setActiveView }) => (
-    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
-        <div className="flex items-center gap-4 mb-6">
-            <button onClick={() => setActiveView('dashboard')} className="p-2 hover:bg-slate-100 rounded-full transition-colors">
-                <ArrowLeft className="w-6 h-6 text-[#333333]" />
-            </button>
-            <h2 className="text-2xl font-bold text-[#333333]">Book Appointment</h2>
-        </div>
+// --- Sub-Views (Defined outside) ---
 
-        <div className="bg-white p-8 rounded-[16px] border border-slate-200 shadow-sm space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                    <label className="text-sm font-semibold text-slate-600">Select Department</label>
-                    <select className="input-field w-full">
-                        <option>General Medicine</option>
-                        <option>Cardiology</option>
-                        <option>Orthopedics</option>
-                        <option>Pediatrics</option>
-                    </select>
-                </div>
-                <div className="space-y-2">
-                    <label className="text-sm font-semibold text-slate-600">Preferred Date</label>
-                    <input type="date" className="input-field w-full" />
-                </div>
-                <div className="space-y-2 md:col-span-2">
-                    <label className="text-sm font-semibold text-slate-600">Reason for Visit</label>
-                    <textarea className="input-field w-full h-32 resize-none" placeholder="Describe your symptoms..."></textarea>
-                </div>
-            </div>
-            <button className="w-full btn-primary py-4 text-lg">Confirm Booking</button>
-        </div>
-    </motion.div>
-);
+const BookingView = ({ setActiveView, user }) => {
+    const [step, setStep] = useState(1); // 1: Form, 2: Success
+    const [booking, setBooking] = useState({ hospital: '', department: 'General Medicine', date: '', slot: '', reason: '' });
 
-const PharmacyView = ({ setActiveView }) => (
-    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
-        <div className="flex items-center gap-4 mb-6">
-            <button onClick={() => setActiveView('dashboard')} className="p-2 hover:bg-slate-100 rounded-full transition-colors">
-                <ArrowLeft className="w-6 h-6 text-[#333333]" />
-            </button>
-            <h2 className="text-2xl font-bold text-[#333333]">Online Pharmacy</h2>
-        </div>
+    const hospitals = ['City General Hospital', 'St. Mary\'s Medical Center', 'Apex Heart Institute', 'Green Valley Clinic'];
+    const slots = ['09:00 AM', '10:30 AM', '02:00 PM', '04:30 PM', '06:00 PM'];
 
-        <div className="bg-white p-6 rounded-[16px] border border-slate-200 shadow-sm">
-            <div className="relative mb-6">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
-                <input className="input-field w-full pl-12" placeholder="Search medicines..." />
+    const handleBook = () => {
+        if (!booking.hospital || !booking.date || !booking.slot) {
+            alert("Please fill all details.");
+            return;
+        }
+        // Mock API call
+        setTimeout(() => setStep(2), 1000);
+    };
+
+    return (
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
+            <div className="flex items-center gap-4 mb-6">
+                <button onClick={() => setActiveView('dashboard')} className="p-2 hover:bg-slate-100 rounded-full transition-colors">
+                    <ArrowLeft className="w-6 h-6 text-[#333333]" />
+                </button>
+                <h2 className="text-2xl font-bold text-[#333333]">Book Appointment</h2>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {[
-                    { name: 'Paracetamol 500mg', brand: 'Dolo', price: '₹30' },
-                    { name: 'Vitamin C', brand: 'Limcee', price: '₹25' },
-                    { name: 'Cough Syrup', brand: 'Benadryl', price: '₹120' },
-                    { name: 'Amoxicillin', brand: 'Mox', price: '₹85' },
-                ].map((med, i) => (
-                    <div key={i} className="flex items-center justify-between p-4 border border-slate-100 rounded-xl hover:border-[#1e88e5] transition-colors cursor-pointer group">
-                        <div className="flex items-center gap-3">
-                            <div className="bg-purple-50 p-2 rounded-lg">
-                                <Pill className="w-6 h-6 text-purple-600" />
-                            </div>
-                            <div>
-                                <h4 className="font-bold text-[#333333]">{med.name}</h4>
-                                <span className="text-xs text-slate-500">{med.brand}</span>
+            {step === 1 ? (
+                <div className="bg-white p-8 rounded-[16px] border border-slate-200 shadow-sm space-y-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="space-y-2 md:col-span-2">
+                            <label className="text-sm font-semibold text-slate-600">Select Hospital</label>
+                            <select
+                                className="input-field w-full"
+                                value={booking.hospital}
+                                onChange={e => setBooking({ ...booking, hospital: e.target.value })}
+                            >
+                                <option value="">-- Choose Hospital --</option>
+                                {hospitals.map(h => <option key={h} value={h}>{h}</option>)}
+                            </select>
+                        </div>
+
+                        <div className="space-y-2">
+                            <label className="text-sm font-semibold text-slate-600">Department</label>
+                            <select
+                                className="input-field w-full"
+                                value={booking.department}
+                                onChange={e => setBooking({ ...booking, department: e.target.value })}
+                            >
+                                <option>General Medicine</option>
+                                <option>Cardiology</option>
+                                <option>Orthopedics</option>
+                                <option>Pediatrics</option>
+                            </select>
+                        </div>
+                        <div className="space-y-2">
+                            <label className="text-sm font-semibold text-slate-600">Preferred Date</label>
+                            <input
+                                type="date"
+                                className="input-field w-full"
+                                value={booking.date}
+                                onChange={e => setBooking({ ...booking, date: e.target.value })}
+                            />
+                        </div>
+
+                        <div className="space-y-2 md:col-span-2">
+                            <label className="text-sm font-semibold text-slate-600">Available Slots</label>
+                            <div className="grid grid-cols-3 md:grid-cols-5 gap-3">
+                                {slots.map(slot => (
+                                    <button
+                                        key={slot}
+                                        onClick={() => setBooking({ ...booking, slot })}
+                                        className={`py-2 px-3 rounded-[12px] text-sm font-medium transition-all ${booking.slot === slot
+                                                ? 'bg-[#1e88e5] text-white shadow-md'
+                                                : 'bg-slate-50 text-slate-600 hover:bg-slate-100'
+                                            }`}
+                                    >
+                                        {slot}
+                                    </button>
+                                ))}
                             </div>
                         </div>
-                        <div className="text-right">
-                            <span className="block font-bold text-[#1e88e5]">{med.price}</span>
-                            <span className="text-xs text-slate-400 group-hover:text-[#1e88e5]">Add +</span>
+
+                        <div className="space-y-2 md:col-span-2">
+                            <label className="text-sm font-semibold text-slate-600">Reason for Visit</label>
+                            <textarea
+                                className="input-field w-full h-24 resize-none"
+                                placeholder="Describe your symptoms..."
+                                value={booking.reason}
+                                onChange={e => setBooking({ ...booking, reason: e.target.value })}
+                            ></textarea>
                         </div>
                     </div>
-                ))}
+                    <button onClick={handleBook} className="w-full btn-primary py-4 text-lg shadow-lg shadow-blue-500/30">Confirm Booking</button>
+                </div>
+            ) : (
+                <motion.div
+                    initial={{ scale: 0.9, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    className="bg-green-50 border border-green-200 p-8 rounded-[16px] text-center space-y-4"
+                >
+                    <div className="bg-green-100 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <CheckCircle className="w-10 h-10 text-green-600" />
+                    </div>
+                    <h3 className="text-2xl font-bold text-green-800">Booking Confirmed!</h3>
+                    <div className="bg-white p-6 rounded-[16px] shadow-sm max-w-md mx-auto text-left space-y-3">
+                        <div className="flex justify-between border-b border-dashed border-slate-200 pb-2">
+                            <span className="text-slate-500">Hospital</span>
+                            <span className="font-semibold">{booking.hospital}</span>
+                        </div>
+                        <div className="flex justify-between border-b border-dashed border-slate-200 pb-2">
+                            <span className="text-slate-500">Department</span>
+                            <span className="font-semibold">{booking.department}</span>
+                        </div>
+                        <div className="flex justify-between border-b border-dashed border-slate-200 pb-2">
+                            <span className="text-slate-500">Date & Time</span>
+                            <span className="font-semibold">{booking.date} at {booking.slot}</span>
+                        </div>
+                        <div className="flex justify-between">
+                            <span className="text-slate-500">Patient</span>
+                            <span className="font-semibold">{user.name}</span>
+                        </div>
+                    </div>
+                    <button onClick={() => setActiveView('dashboard')} className="mt-6 text-green-700 font-bold hover:underline">Return to Dashboard</button>
+                </motion.div>
+            )}
+        </motion.div>
+    );
+};
+
+const PharmacyView = ({ setActiveView }) => {
+    const [cart, setCart] = useState({});
+
+    const addToCart = (item) => {
+        setCart(prev => ({ ...prev, [item]: (prev[item] || 0) + 1 }));
+        alert(`Added ${item} to cart!`);
+    };
+
+    return (
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
+            <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-4">
+                    <button onClick={() => setActiveView('dashboard')} className="p-2 hover:bg-slate-100 rounded-full transition-colors">
+                        <ArrowLeft className="w-6 h-6 text-[#333333]" />
+                    </button>
+                    <h2 className="text-2xl font-bold text-[#333333]">Online Pharmacy</h2>
+                </div>
+                <div className="flex items-center gap-2 bg-slate-100 px-4 py-2 rounded-full">
+                    <ShoppingCart className="w-5 h-5 text-slate-600" />
+                    <span className="font-bold text-[#1e88e5]">{Object.values(cart).reduce((a, b) => a + b, 0)} Items</span>
+                </div>
             </div>
+
+            <div className="bg-white p-6 rounded-[16px] border border-slate-200 shadow-sm">
+                <div className="relative mb-6">
+                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
+                    <input className="input-field w-full pl-12" placeholder="Search medicines..." />
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {[
+                        { name: 'Paracetamol 500mg', brand: 'Dolo', price: '₹30' },
+                        { name: 'Vitamin C', brand: 'Limcee', price: '₹25' },
+                        { name: 'Cough Syrup', brand: 'Benadryl', price: '₹120' },
+                        { name: 'Amoxicillin', brand: 'Mox', price: '₹85' },
+                    ].map((med, i) => (
+                        <div key={i} className="flex items-center justify-between p-4 border border-slate-100 rounded-xl hover:border-[#1e88e5] transition-colors group">
+                            <div className="flex items-center gap-3">
+                                <div className="bg-purple-50 p-2 rounded-lg">
+                                    <Pill className="w-6 h-6 text-purple-600" />
+                                </div>
+                                <div>
+                                    <h4 className="font-bold text-[#333333]">{med.name}</h4>
+                                    <span className="text-xs text-slate-500">{med.brand}</span>
+                                </div>
+                            </div>
+                            <div className="flex flex-col items-end gap-2">
+                                <span className="font-bold text-[#1e88e5]">{med.price}</span>
+                                <button
+                                    onClick={() => addToCart(med.name)}
+                                    className="bg-blue-50 text-[#1e88e5] px-3 py-1 rounded-[8px] text-xs font-bold hover:bg-[#1e88e5] hover:text-white transition-colors"
+                                >
+                                    Add to Cart
+                                </button>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            </div>
+        </motion.div>
+    );
+};
+
+const SimpleListView = ({ title, items, setActiveView, icon: Icon, color }) => (
+    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
+        <div className="flex items-center gap-4 mb-6">
+            <button onClick={() => setActiveView('dashboard')} className="p-2 hover:bg-slate-100 rounded-full transition-colors">
+                <ArrowLeft className="w-6 h-6 text-[#333333]" />
+            </button>
+            <h2 className="text-2xl font-bold text-[#333333]">{title}</h2>
+        </div>
+        <div className="bg-white rounded-[16px] border border-slate-200 shadow-sm overflow-hidden">
+            {items.map((item, i) => (
+                <div key={i} className="p-4 border-b border-slate-100 last:border-0 flex items-center gap-4 hover:bg-slate-50">
+                    <div className={`p-3 rounded-full bg-${color}-50`}>
+                        <Icon className={`w-5 h-5 text-${color}-600`} />
+                    </div>
+                    <div>
+                        <h4 className="font-bold text-[#333333]">{item.title}</h4>
+                        <p className="text-xs text-slate-500">{item.date}</p>
+                    </div>
+                </div>
+            ))}
+            {items.length === 0 && <div className="p-8 text-center text-slate-400">No records found.</div>}
         </div>
     </motion.div>
 );
+
 
 const Home = ({ user, setUser, logout }) => {
     const [emergencyData, setEmergencyData] = useState(null);
     const [loading, setLoading] = useState(false);
-    const [activeView, setActiveView] = useState('dashboard'); // dashboard, booking, pharmacy
+    const [activeView, setActiveView] = useState('dashboard');
+    const [familyMember, setFamilyMember] = useState({ name: '', phone: '' });
+
+    // Load family member from local storage
+    useEffect(() => {
+        const saved = localStorage.getItem('mediverse_family');
+        if (saved) setFamilyMember(JSON.parse(saved));
+    }, []);
+
+    const saveFamilyMember = () => {
+        localStorage.setItem('mediverse_family', JSON.stringify(familyMember));
+        alert("Family member saved!");
+    };
 
     const handleEmergency = async () => {
-        if (!window.confirm('🚨 EMERGENCY ALERT: This will dispatch an ambulance and notify family. Continue?')) return;
+        if (!familyMember.name || !familyMember.phone) {
+            alert("Please add a Family Member in the dashboard first to enable Emergency Alerts.");
+            return;
+        }
+
+        if (!window.confirm(`🚨 RED ALERT: Dispatching Ambulance & Notifying ${familyMember.name} at ${familyMember.phone}. Continue?`)) return;
+
         setLoading(true);
         try {
             navigator.geolocation.getCurrentPosition(
@@ -155,165 +314,166 @@ const Home = ({ user, setUser, logout }) => {
             </nav>
 
             {/* Main Content Area */}
-            {activeView === 'booking' ? <BookingView setActiveView={setActiveView} /> :
-                activeView === 'pharmacy' ? <PharmacyView setActiveView={setActiveView} /> : (
-                    /* Dashboard View */
-                    <div className="space-y-8">
-                        {/* 1. Top Section: Today's Status (Blue Card) */}
-                        <motion.div
-                            whileHover={{ scale: 1.01 }}
-                            className="w-full bg-[#1e88e5] text-white p-8 rounded-[16px] shadow-lg relative overflow-hidden flex flex-col md:flex-row items-center justify-between"
-                        >
-                            <div className="relative z-10 space-y-4">
-                                <div>
-                                    <p className="text-blue-100 font-medium mb-1">Daily Health Streak</p>
-                                    <h1 className="text-5xl font-bold mb-2">{user?.streak || 0} Days</h1>
-                                    <p className="text-blue-100 text-sm">Keep it up! Your consistency is improving your health score.</p>
-                                </div>
-                                <button
-                                    onClick={updateStreak}
-                                    className="bg-white text-[#1e88e5] px-6 py-3 rounded-[16px] font-bold flex items-center gap-2 hover:bg-blue-50 transition-colors shadow-md"
-                                >
-                                    <ShieldCheck className="w-5 h-5" />
-                                    Mark Today's Dose
-                                </button>
-                            </div>
-                            <Activity className="w-48 h-48 text-white/10 absolute -right-8 -bottom-8" />
-                        </motion.div>
-
-                        {/* 2. Middle Grid */}
-                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                            <div className="lg:col-span-2 space-y-6">
-                                <section>
-                                    <h3 className="text-xl font-bold text-[#333333] mb-4 px-1">Quick Actions</h3>
-                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                                        {[
-                                            { icon: Calendar, label: 'Book Visit', color: 'text-blue-600', bg: 'bg-blue-50', action: 'booking' },
-                                            { icon: User, label: 'Pharmacy', color: 'text-purple-600', bg: 'bg-purple-50', action: 'pharmacy' },
-                                            { icon: History, label: 'History', color: 'text-teal-600', bg: 'bg-teal-50', action: 'history' },
-                                            { icon: Plus, label: 'Reports', color: 'text-indigo-600', bg: 'bg-indigo-50', action: 'reports' },
-                                        ].map((item, i) => (
-                                            <motion.button
-                                                key={i}
-                                                onClick={() => item.action && setActiveView(item.action)}
-                                                whileHover={{ y: -2 }}
-                                                className="bg-white border border-slate-200 p-6 rounded-[16px] shadow-sm flex flex-col items-center gap-3 hover:shadow-md transition-all group"
+            {activeView === 'booking' ? <BookingView setActiveView={setActiveView} user={user} /> :
+                activeView === 'pharmacy' ? <PharmacyView setActiveView={setActiveView} /> :
+                    activeView === 'history' ? <SimpleListView title="Medical History" items={[{ title: 'Viral Fever Checkup', date: '10 Feb 2026' }, { title: 'Full Body Checkup', date: '15 Jan 2026' }]} setActiveView={setActiveView} icon={History} color="teal" /> :
+                        activeView === 'reports' ? <SimpleListView title="Lab Reports" items={[{ title: 'Blood Test Report.pdf', date: '10 Feb 2026' }]} setActiveView={setActiveView} icon={Plus} color="indigo" /> :
+                            (
+                                /* Dashboard View */
+                                <div className="space-y-8">
+                                    {/* 1. Top Section: Today's Status */}
+                                    <motion.div
+                                        whileHover={{ scale: 1.01 }}
+                                        className="w-full bg-[#1e88e5] text-white p-8 rounded-[16px] shadow-lg relative overflow-hidden flex flex-col md:flex-row items-center justify-between"
+                                    >
+                                        <div className="relative z-10 space-y-4">
+                                            <div>
+                                                <p className="text-blue-100 font-medium mb-1">Daily Health Streak</p>
+                                                <h1 className="text-5xl font-bold mb-2">{user?.streak || 0} Days</h1>
+                                                <p className="text-blue-100 text-sm">Keep it up! Your consistency is improving your health score.</p>
+                                            </div>
+                                            <button
+                                                onClick={updateStreak}
+                                                className="bg-white text-[#1e88e5] px-6 py-3 rounded-[16px] font-bold flex items-center gap-2 hover:bg-blue-50 transition-colors shadow-md"
                                             >
-                                                <div className={`${item.bg} p-4 rounded-xl group-hover:scale-110 transition-transform`}>
-                                                    <item.icon className={`w-6 h-6 ${item.color}`} />
-                                                </div>
-                                                <span className="text-sm font-semibold text-[#333333]">{item.label}</span>
-                                            </motion.button>
-                                        ))}
-                                    </div>
-                                </section>
-
-                                <section>
-                                    <div className="flex items-center justify-between px-1 mb-4">
-                                        <h3 className="text-xl font-bold text-[#333333]">Recent Activity</h3>
-                                        <button className="text-[#1e88e5] text-sm font-semibold hover:underline">View All</button>
-                                    </div>
-                                    <div className="bg-white border border-slate-200 rounded-[16px] shadow-sm overflow-hidden">
-                                        {(Array.isArray(user?.appointments) ? user.appointments : []).map((appt, i) => (
-                                            <div key={i} className="p-4 border-b border-slate-100 last:border-0 flex items-center justify-between hover:bg-slate-50 transition-colors">
-                                                <div className="flex items-center gap-4">
-                                                    <div className="bg-slate-100 p-3 rounded-full">
-                                                        <User className="w-5 h-5 text-slate-600" />
-                                                    </div>
-                                                    <div>
-                                                        <h4 className="font-bold text-[#333333]">{appt.docName}</h4>
-                                                        <p className="text-xs text-slate-500">{appt.hospital} • {appt.date}</p>
-                                                    </div>
-                                                </div>
-                                                <span className="bg-blue-50 text-[#1e88e5] px-3 py-1 rounded-[8px] text-xs font-bold">
-                                                    {appt.time}
-                                                </span>
-                                            </div>
-                                        ))}
-                                        {!user?.appointments?.length && (
-                                            <div className="p-8 text-center text-slate-400">
-                                                No recent activity found.
-                                            </div>
-                                        )}
-                                    </div>
-                                </section>
-                            </div>
-
-                            {/* 3. Emergency Section */}
-                            <div className="space-y-6">
-                                <motion.div
-                                    whileHover={{ scale: 1.02 }}
-                                    className="bg-[#FFFFFF] border-2 border-red-100 p-8 rounded-[16px] shadow-lg relative overflow-hidden group"
-                                >
-                                    <div className="relative z-10 text-center">
-                                        <div className="bg-red-50 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-                                            <AlertTriangle className="text-red-600 w-8 h-8" />
+                                                <ShieldCheck className="w-5 h-5" />
+                                                Mark Today's Dose
+                                            </button>
                                         </div>
-                                        <h2 className="text-2xl font-bold mb-2 text-red-600">Emergency</h2>
-                                        <p className="text-slate-500 text-sm mb-6">Need immediate help? Press below to alert nearby ambulances.</p>
-                                        <button
-                                            onClick={handleEmergency}
-                                            disabled={loading}
-                                            className="bg-red-600 hover:bg-red-700 text-white w-full py-4 rounded-[16px] font-bold text-lg flex items-center justify-center gap-3 transition-all active:scale-95 shadow-xl shadow-red-600/20"
-                                        >
-                                            <PhoneCall className="w-6 h-6 animate-pulse" />
-                                            {loading ? 'Dispatching...' : 'Call Ambulance'}
-                                        </button>
+                                        <Activity className="w-48 h-48 text-white/10 absolute -right-8 -bottom-8" />
+                                    </motion.div>
+
+                                    {/* 2. Middle Grid */}
+                                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                                        <div className="lg:col-span-2 space-y-8">
+                                            {/* Quick Actions */}
+                                            <section>
+                                                <h3 className="text-xl font-bold text-[#333333] mb-4 px-1">Quick Actions</h3>
+                                                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                                    {[
+                                                        { icon: Calendar, label: 'Book Visit', color: 'text-blue-600', bg: 'bg-blue-50', action: 'booking' },
+                                                        { icon: User, label: 'Pharmacy', color: 'text-purple-600', bg: 'bg-purple-50', action: 'pharmacy' },
+                                                        { icon: History, label: 'History', color: 'text-teal-600', bg: 'bg-teal-50', action: 'history' },
+                                                        { icon: Plus, label: 'Reports', color: 'text-indigo-600', bg: 'bg-indigo-50', action: 'reports' },
+                                                    ].map((item, i) => (
+                                                        <motion.button
+                                                            key={i}
+                                                            onClick={() => item.action && setActiveView(item.action)}
+                                                            whileHover={{ y: -2 }}
+                                                            className="bg-white border border-slate-200 p-6 rounded-[16px] shadow-sm flex flex-col items-center gap-3 hover:shadow-md transition-all group"
+                                                        >
+                                                            <div className={`${item.bg} p-4 rounded-xl group-hover:scale-110 transition-transform`}>
+                                                                <item.icon className={`w-6 h-6 ${item.color}`} />
+                                                            </div>
+                                                            <span className="text-sm font-semibold text-[#333333]">{item.label}</span>
+                                                        </motion.button>
+                                                    ))}
+                                                </div>
+                                            </section>
+
+                                            {/* Family Member Setup */}
+                                            <section className="bg-white border border-slate-200 p-6 rounded-[16px] shadow-sm">
+                                                <h3 className="text-lg font-bold text-[#333333] mb-4">Family Emergency Contact</h3>
+                                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+                                                    <div className="space-y-1">
+                                                        <label className="text-xs font-semibold text-slate-500">Name</label>
+                                                        <input
+                                                            className="input-field"
+                                                            placeholder="e.g. John Doe"
+                                                            value={familyMember.name}
+                                                            onChange={e => setFamilyMember({ ...familyMember, name: e.target.value })}
+                                                        />
+                                                    </div>
+                                                    <div className="space-y-1">
+                                                        <label className="text-xs font-semibold text-slate-500">Phone</label>
+                                                        <input
+                                                            className="input-field"
+                                                            placeholder="e.g. 9876543210"
+                                                            value={familyMember.phone}
+                                                            onChange={e => setFamilyMember({ ...familyMember, phone: e.target.value })}
+                                                        />
+                                                    </div>
+                                                    <button onClick={saveFamilyMember} className="btn-primary py-3 text-sm">Save Contact</button>
+                                                </div>
+                                            </section>
+
+                                        </div>
+
+                                        {/* 3. Emergency Section */}
+                                        <div className="space-y-6">
+                                            <motion.div
+                                                whileHover={{ scale: 1.02 }}
+                                                className="bg-[#FFFFFF] border-2 border-red-100 p-8 rounded-[16px] shadow-lg relative overflow-hidden group"
+                                            >
+                                                <div className="relative z-10 text-center">
+                                                    <div className="bg-red-50 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                                                        <AlertTriangle className="text-[#d32f2f] w-8 h-8" />
+                                                    </div>
+                                                    <h2 className="text-2xl font-bold mb-2 text-[#d32f2f]">Emergency</h2>
+                                                    <p className="text-slate-500 text-sm mb-6">Need immediate help? Press below to alert nearby ambulances.</p>
+                                                    <button
+                                                        onClick={handleEmergency}
+                                                        disabled={loading}
+                                                        className="bg-[#d32f2f] hover:bg-red-700 text-white w-full py-4 rounded-[16px] font-bold text-lg flex items-center justify-center gap-3 transition-all active:scale-95 shadow-xl shadow-red-600/20"
+                                                    >
+                                                        <PhoneCall className="w-6 h-6 animate-pulse" />
+                                                        {loading ? 'Dispatching...' : 'Call Ambulance'}
+                                                    </button>
+                                                </div>
+                                            </motion.div>
+
+                                            <AnimatePresence>
+                                                {emergencyData && (
+                                                    <motion.div
+                                                        initial={{ opacity: 0, y: 20 }}
+                                                        animate={{ opacity: 1, y: 0 }}
+                                                        exit={{ opacity: 0, y: 20 }}
+                                                        className="bg-white border-2 border-[#1e88e5] p-6 rounded-[16px] shadow-xl"
+                                                    >
+                                                        <div className="flex items-center gap-3 mb-4">
+                                                            <div className="bg-blue-50 p-2 rounded-lg">
+                                                                <Ambulance className="w-6 h-6 text-[#1e88e5]" />
+                                                            </div>
+                                                            <div>
+                                                                <h4 className="font-bold text-[#333333]">Ambulance En Route</h4>
+                                                                <span className="text-xs text-slate-500">Tracking ID: #SOS-8892</span>
+                                                            </div>
+                                                        </div>
+
+                                                        <div className="space-y-4">
+                                                            <div className="flex justify-between items-end">
+                                                                <span className="text-slate-500 text-sm">Estimated Arrival</span>
+                                                                <span className="text-2xl font-bold text-[#1e88e5]">{emergencyData.ambulance.eta}</span>
+                                                            </div>
+                                                            <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+                                                                <div className="bg-[#1e88e5] h-full w-[60%] animate-pulse"></div>
+                                                            </div>
+
+                                                            <div className="bg-slate-50 p-4 rounded-[12px] space-y-2">
+                                                                <div className="flex items-center gap-3 text-sm">
+                                                                    <MapPin className="w-4 h-4 text-slate-400" />
+                                                                    <span className="font-medium">{emergencyData.hospital.name}</span>
+                                                                </div>
+                                                                <div className="flex items-center gap-3 text-sm">
+                                                                    <User className="w-4 h-4 text-slate-400" />
+                                                                    <span>Driver: {emergencyData.ambulance.driver_name}</span>
+                                                                </div>
+                                                            </div>
+
+                                                            <button
+                                                                onClick={() => setEmergencyData(null)}
+                                                                className="w-full py-3 text-slate-400 text-sm font-semibold hover:text-slate-600"
+                                                            >
+                                                                Dismiss Tracking
+                                                            </button>
+                                                        </div>
+                                                    </motion.div>
+                                                )}
+                                            </AnimatePresence>
+                                        </div>
                                     </div>
-                                </motion.div>
-
-                                <AnimatePresence>
-                                    {emergencyData && (
-                                        <motion.div
-                                            initial={{ opacity: 0, y: 20 }}
-                                            animate={{ opacity: 1, y: 0 }}
-                                            exit={{ opacity: 0, y: 20 }}
-                                            className="bg-white border-2 border-[#1e88e5] p-6 rounded-[16px] shadow-xl"
-                                        >
-                                            <div className="flex items-center gap-3 mb-4">
-                                                <div className="bg-blue-50 p-2 rounded-lg">
-                                                    <Ambulance className="w-6 h-6 text-[#1e88e5]" />
-                                                </div>
-                                                <div>
-                                                    <h4 className="font-bold text-[#333333]">Ambulance En Route</h4>
-                                                    <span className="text-xs text-slate-500">Tracking ID: #SOS-8892</span>
-                                                </div>
-                                            </div>
-
-                                            <div className="space-y-4">
-                                                <div className="flex justify-between items-end">
-                                                    <span className="text-slate-500 text-sm">Estimated Arrival</span>
-                                                    <span className="text-2xl font-bold text-[#1e88e5]">{emergencyData.ambulance.eta}</span>
-                                                </div>
-                                                <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
-                                                    <div className="bg-[#1e88e5] h-full w-[60%] animate-pulse"></div>
-                                                </div>
-
-                                                <div className="bg-slate-50 p-4 rounded-[12px] space-y-2">
-                                                    <div className="flex items-center gap-3 text-sm">
-                                                        <MapPin className="w-4 h-4 text-slate-400" />
-                                                        <span className="font-medium">{emergencyData.hospital.name}</span>
-                                                    </div>
-                                                    <div className="flex items-center gap-3 text-sm">
-                                                        <User className="w-4 h-4 text-slate-400" />
-                                                        <span>Driver: {emergencyData.ambulance.driver_name}</span>
-                                                    </div>
-                                                </div>
-
-                                                <button
-                                                    onClick={() => setEmergencyData(null)}
-                                                    className="w-full py-3 text-slate-400 text-sm font-semibold hover:text-slate-600"
-                                                >
-                                                    Dismiss Tracking
-                                                </button>
-                                            </div>
-                                        </motion.div>
-                                    )}
-                                </AnimatePresence>
-                            </div>
-                        </div>
-                    </div>
-                )}
+                                </div>
+                            )}
         </div>
     );
 };
