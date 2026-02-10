@@ -1,37 +1,46 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Heart } from 'lucide-react';
+import { Heart, Stethoscope, User } from 'lucide-react';
 import { authService } from './services/api';
 import Home from './pages/Home';
 import './index.css';
 
 const App = () => {
   const [user, setUser] = useState(null);
-  const [view, setView] = useState('login'); // login, register, dashboard
-  const [credentials, setCredentials] = useState({ username: '', password: '', role: 'patient' });
+  const [view, setView] = useState('landing'); // landing, login, register, dashboard
+  const [role, setRole] = useState(null); // 'patient' or 'doctor'
+  const [credentials, setCredentials] = useState({ username: '', password: '' });
   const [registerData, setRegisterData] = useState({
     name: '', email: '', age: '', phone: '',
-    address: '', username: '', password: '', role: 'patient'
+    address: '', username: '', password: ''
   });
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     const saved = localStorage.getItem('mediverse_user');
     if (saved) {
-      setUser(JSON.parse(saved));
+      const parsedUser = JSON.parse(saved);
+      setUser(parsedUser);
+      setRole(parsedUser.role || 'patient');
       setView('dashboard');
     }
   }, []);
+
+  const handleRoleSelect = (selectedRole) => {
+    setRole(selectedRole);
+    setView('login');
+  };
 
   const handleLogin = async (e) => {
     e.preventDefault();
     setLoading(true);
     try {
-      // For MVP, we use the same login endpoint, but real apps might differ by role
+      // For MVP, using same endpoint. In real app, might separate endpoints.
       const res = await authService.loginPatient(credentials);
       if (res.success) {
-        setUser({ ...res.user, role: credentials.role }); // Store role in user object
-        localStorage.setItem('mediverse_user', JSON.stringify({ ...res.user, role: credentials.role }));
+        const userData = { ...res.user, role }; // Attach selected role
+        setUser(userData);
+        localStorage.setItem('mediverse_user', JSON.stringify(userData));
         setView('dashboard');
       }
     } catch (err) {
@@ -45,7 +54,7 @@ const App = () => {
     e.preventDefault();
     setLoading(true);
     try {
-      const res = await authService.registerPatient(registerData);
+      const res = await authService.registerPatient({ ...registerData, role });
       if (res.success) {
         alert('Registration Successful! Please login.');
         setView('login');
@@ -59,12 +68,20 @@ const App = () => {
 
   const logout = () => {
     setUser(null);
+    setRole(null);
     localStorage.removeItem('mediverse_user');
-    setView('login');
+    setView('landing');
+  };
+
+  const goBack = () => {
+    if (view === 'login' || view === 'register') {
+      setView('landing');
+      setRole(null);
+    }
   };
 
   if (view === 'dashboard' && user) {
-    return <Home user={user} setUser={setUser} logout={logout} />;
+    return <Home user={user} setUser={setUser} logout={logout} role={role} />;
   }
 
   return (
@@ -72,7 +89,7 @@ const App = () => {
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-white p-8 w-full max-w-2xl shadow-xl rounded-[16px] border border-slate-200"
+        className="bg-white p-8 w-full max-w-2xl shadow-xl rounded-[16px] border border-slate-200 relative"
       >
         <div className="flex justify-center mb-6">
           <div className="bg-[#1e88e5]/10 p-4 rounded-full">
@@ -82,115 +99,129 @@ const App = () => {
         <h2 className="text-3xl font-bold text-center mb-2 text-[#333333]">MediVerse</h2>
         <p className="text-slate-500 text-center mb-8">Professional Healthcare Ecosystem</p>
 
-        <form onSubmit={view === 'login' ? handleLogin : handleRegister} className="space-y-6">
+        {view === 'landing' && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => handleRoleSelect('patient')}
+              className="flex flex-col items-center justify-center p-8 rounded-[16px] border-2 border-slate-100 hover:border-[#1e88e5] hover:bg-blue-50 transition-all gap-4 group"
+            >
+              <div className="bg-blue-100 p-4 rounded-full group-hover:bg-[#1e88e5] transition-colors">
+                <User className="w-8 h-8 text-[#1e88e5] group-hover:text-white" />
+              </div>
+              <span className="text-xl font-bold text-slate-700 group-hover:text-[#1e88e5]">I am a Patient</span>
+            </motion.button>
 
-          {/* Role Selection Toggle */}
-          <div className="flex justify-center mb-6">
-            <div className="bg-slate-100 p-1 rounded-[12px] flex">
-              {['patient', 'doctor'].map((role) => (
-                <button
-                  key={role}
-                  type="button"
-                  onClick={() => view === 'login'
-                    ? setCredentials({ ...credentials, role })
-                    : setRegisterData({ ...registerData, role })
-                  }
-                  className={`px-6 py-2 rounded-[10px] text-sm font-bold capitalize transition-all ${(view === 'login' ? credentials.role : registerData.role) === role
-                      ? 'bg-white text-[#1e88e5] shadow-sm'
-                      : 'text-slate-500 hover:text-slate-700'
-                    }`}
-                >
-                  {role}
-                </button>
-              ))}
-            </div>
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => handleRoleSelect('doctor')}
+              className="flex flex-col items-center justify-center p-8 rounded-[16px] border-2 border-slate-100 hover:border-teal-500 hover:bg-teal-50 transition-all gap-4 group"
+            >
+              <div className="bg-teal-100 p-4 rounded-full group-hover:bg-teal-500 transition-colors">
+                <Stethoscope className="w-8 h-8 text-teal-600 group-hover:text-white" />
+              </div>
+              <span className="text-xl font-bold text-slate-700 group-hover:text-teal-600">I am a Doctor</span>
+            </motion.button>
           </div>
+        )}
 
-          {view === 'register' && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* Strict 2-Column Grid */}
-              <input
-                className="input-field"
-                placeholder="Full Name"
-                required
-                onChange={e => setRegisterData({ ...registerData, name: e.target.value })}
-              />
-              <input
-                className="input-field"
-                type="email"
-                placeholder="Email Address"
-                onChange={e => setRegisterData({ ...registerData, email: e.target.value })}
-              />
-
-              <input
-                className="input-field"
-                placeholder="Age"
-                type="number"
-                required
-                onChange={e => setRegisterData({ ...registerData, age: e.target.value })}
-              />
-              <input
-                className="input-field"
-                placeholder="Phone Number"
-                required
-                onChange={e => setRegisterData({ ...registerData, phone: e.target.value })}
-              />
-
-              <input
-                className="input-field"
-                placeholder="Address"
-                required
-                onChange={e => setRegisterData({ ...registerData, address: e.target.value })}
-              />
-              <input
-                className="input-field"
-                placeholder="Username"
-                required
-                onChange={e => setRegisterData({ ...registerData, username: e.target.value })}
-              />
-
-              <input
-                className="input-field md:col-span-2"
-                type="password"
-                placeholder="Create Password"
-                required
-                onChange={e => setRegisterData({ ...registerData, password: e.target.value })}
-              />
+        {(view === 'login' || view === 'register') && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+            <div className="mb-6 flex items-center justify-between">
+              <button onClick={goBack} className="text-sm text-slate-400 hover:text-[#1e88e5] transition-colors">
+                ← Back to Role Selection
+              </button>
+              <span className="px-3 py-1 bg-slate-100 rounded-full text-xs font-bold uppercase text-slate-600 tracking-wider">
+                {role} Portal
+              </span>
             </div>
-          )}
 
-          {view === 'login' && (
-            <div className="space-y-4">
-              <input
-                className="input-field w-full"
-                placeholder="Username"
-                required
-                onChange={e => setCredentials({ ...credentials, username: e.target.value })}
-              />
-              <input
-                className="input-field w-full"
-                type="password"
-                placeholder="Password"
-                required
-                onChange={e => setCredentials({ ...credentials, password: e.target.value })}
-              />
-            </div>
-          )}
+            <form onSubmit={view === 'login' ? handleLogin : handleRegister} className="space-y-6">
+              {view === 'register' && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <input
+                    className="input-field"
+                    placeholder="Full Name"
+                    required
+                    onChange={e => setRegisterData({ ...registerData, name: e.target.value })}
+                  />
+                  <input
+                    className="input-field"
+                    type="email"
+                    placeholder="Email Address"
+                    onChange={e => setRegisterData({ ...registerData, email: e.target.value })}
+                  />
+                  <input
+                    className="input-field"
+                    placeholder="Age"
+                    type="number"
+                    required
+                    onChange={e => setRegisterData({ ...registerData, age: e.target.value })}
+                  />
+                  <input
+                    className="input-field"
+                    placeholder="Phone Number"
+                    required
+                    onChange={e => setRegisterData({ ...registerData, phone: e.target.value })}
+                  />
+                  <input
+                    className="input-field"
+                    placeholder="Address"
+                    required
+                    onChange={e => setRegisterData({ ...registerData, address: e.target.value })}
+                  />
+                  <input
+                    className="input-field"
+                    placeholder="Username"
+                    required
+                    onChange={e => setRegisterData({ ...registerData, username: e.target.value })}
+                  />
+                  <input
+                    className="input-field md:col-span-2"
+                    type="password"
+                    placeholder="Create Password"
+                    required
+                    onChange={e => setRegisterData({ ...registerData, password: e.target.value })}
+                  />
+                </div>
+              )}
 
-          <button className="w-full py-4 bg-[#1e88e5] hover:bg-blue-600 text-white rounded-[16px] font-bold text-lg shadow-md transition-all active:scale-95" disabled={loading}>
-            {loading ? 'Processing...' : (view === 'login' ? 'Authenticate' : 'Join MediVerse')}
-          </button>
-        </form>
+              {view === 'login' && (
+                <div className="space-y-4">
+                  <input
+                    className="input-field w-full"
+                    placeholder="Username"
+                    required
+                    onChange={e => setCredentials({ ...credentials, username: e.target.value })}
+                  />
+                  <input
+                    className="input-field w-full"
+                    type="password"
+                    placeholder="Password"
+                    required
+                    onChange={e => setCredentials({ ...credentials, password: e.target.value })}
+                  />
+                </div>
+              )}
 
-        <p className="text-center mt-6 text-slate-500">
-          {view === 'login' ? "New to MediVerse? " : "Already registered? "}
-          <span
-            className="text-[#1e88e5] cursor-pointer font-semibold hover:underline"
-            onClick={() => setView(view === 'login' ? 'register' : 'login')}
-          >
-            {view === 'login' ? "Create Account" : "Login"}
-          </span>
-        </p>
+              <button className="w-full py-4 bg-[#1e88e5] hover:bg-blue-600 text-white rounded-[16px] font-bold text-lg shadow-md transition-all active:scale-95" disabled={loading}>
+                {loading ? 'Processing...' : (view === 'login' ? `Login as ${role === 'doctor' ? 'Doctor' : 'Patient'}` : `Register as ${role === 'doctor' ? 'Doctor' : 'Patient'}`)}
+              </button>
+            </form>
+
+            <p className="text-center mt-6 text-slate-500">
+              {view === 'login' ? "New to MediVerse? " : "Already registered? "}
+              <span
+                className="text-[#1e88e5] cursor-pointer font-semibold hover:underline"
+                onClick={() => setView(view === 'login' ? 'register' : 'login')}
+              >
+                {view === 'login' ? "Create Account" : "Login"}
+              </span>
+            </p>
+          </motion.div>
+        )}
       </motion.div>
     </div>
   );
