@@ -401,7 +401,7 @@ const ReportsView = ({ setActiveView }) => {
     );
 };
 
-const HealthyTipsView = () => (
+const HealthyTipsView = ({ handleHealthyHabit }) => (
     <div className="grid grid-cols-2 gap-4">
         {[
             { title: 'Morning Warmup', icon: Sun, color: 'text-orange-500', bg: 'bg-orange-50' },
@@ -409,7 +409,7 @@ const HealthyTipsView = () => (
             { title: 'Hydration', icon: Activity, color: 'text-primary', bg: 'bg-blue-50' },
             { title: 'Sleep Well', icon: User, color: 'text-purple-500', bg: 'bg-purple-50' },
         ].map((tip, i) => (
-            <div key={i} className="bg-white p-4 rounded-3xl shadow-sm border border-slate-100 flex items-center gap-3">
+            <div key={i} onClick={() => handleHealthyHabit(tip)} className="bg-white p-4 rounded-3xl shadow-sm border border-slate-100 flex items-center gap-3 cursor-pointer hover:bg-slate-50 transition-colors">
                 <div className={`${tip.bg} p-3 rounded-full`}>
                     <tip.icon className={`w-5 h-5 ${tip.color}`} />
                 </div>
@@ -474,7 +474,7 @@ const DoctorDashboard = ({ user, logout }) => {
 
 
 
-const PatientDashboard = ({ user, logout, activeView, setActiveView, emergencyData, handleEmergency, handleVideoCall, loading, familyMember, setEditFamily, inputFamily, setInputFamily, saveFamilyMember, editFamily }) => {
+const PatientDashboard = ({ user, logout, activeView, setActiveView, emergencyData, handleEmergency, handleVideoCall, loading, familyMember, setEditFamily, inputFamily, setInputFamily, saveFamilyMember, editFamily, smartwatchConnected, connectSmartwatch, healthMetrics, handleHealthyHabit }) => {
     if (activeView !== 'dashboard') {
 
         return (
@@ -511,20 +511,36 @@ const PatientDashboard = ({ user, logout, activeView, setActiveView, emergencyDa
                         <p className="text-xs text-slate-400 mt-2">Connect in 2 mins</p>
                     </div>
 
-                    <div className="bg-white p-5 rounded-3xl shadow-sm hover:shadow-md transition-shadow cursor-pointer col-span-2 flex items-center justify-between" onClick={() => window.alert("Connecting to Smartwatch...")}>
+
+                    {/* Connect Smartwatch Card - NEW */}
+                    <div className={`p-5 rounded-3xl shadow-sm hover:shadow-md transition-shadow cursor-pointer col-span-2 flex items-center justify-between ${smartwatchConnected ? 'bg-slate-900 border border-slate-700' : 'bg-white'}`} onClick={connectSmartwatch}>
                         <div className="flex items-center gap-4">
-                            <div className="bg-slate-900 w-12 h-12 rounded-full flex items-center justify-center">
-                                <Activity className="w-6 h-6 text-green-400" />
+                            <div className={`w-12 h-12 rounded-full flex items-center justify-center ${smartwatchConnected ? 'bg-green-500/20' : 'bg-slate-900'}`}>
+                                <Activity className={`w-6 h-6 ${smartwatchConnected ? 'text-green-400' : 'text-green-400'}`} />
                             </div>
                             <div>
-                                <h3 className="font-bold text-slate-800 leading-tight">Connect Smartwatch</h3>
-                                <p className="text-xs text-slate-400">Sync health data</p>
+                                <h3 className={`font-bold leading-tight ${smartwatchConnected ? 'text-white' : 'text-slate-800'}`}>
+                                    {smartwatchConnected ? 'Galaxy Watch 6' : 'Connect Smartwatch'}
+                                </h3>
+                                <p className={`text-xs ${smartwatchConnected ? 'text-slate-400' : 'text-slate-400'}`}>
+                                    {smartwatchConnected ? 'Live: 72 BPM | 120/80' : 'Sync health data'}
+                                </p>
                             </div>
                         </div>
-                        <div className="bg-slate-100 p-2 rounded-full">
-                            <Plus className="w-5 h-5 text-slate-600" />
-                        </div>
+                        {smartwatchConnected ? (
+                            <div className="flex gap-4 text-white text-xs">
+                                <div className="text-center">
+                                    <span className="block font-bold text-lg text-red-400">{healthMetrics?.bpm || 72}</span>
+                                    <span className="text-slate-500">BPM</span>
+                                </div>
+                            </div>
+                        ) : (
+                            <div className="bg-slate-100 p-2 rounded-full">
+                                <Plus className="w-5 h-5 text-slate-600" />
+                            </div>
+                        )}
                     </div>
+
 
 
 
@@ -624,7 +640,7 @@ const PatientDashboard = ({ user, logout, activeView, setActiveView, emergencyDa
                 {/* Tips */}
                 <div id="healthy-habits">
                     <SectionTitle title="Healthy Habits" />
-                    <HealthyTipsView />
+                    <HealthyTipsView handleHealthyHabit={handleHealthyHabit} />
                 </div>
 
             </div>
@@ -643,23 +659,54 @@ const Home = ({ user, logout, role }) => {
     const [inputFamily, setInputFamily] = useState({ name: '', phone: '' });
 
 
+    const [smartwatchConnected, setSmartwatchConnected] = useState(false);
+    const [healthMetrics, setHealthMetrics] = useState(null);
+
     useEffect(() => {
         const savedFam = localStorage.getItem('mediverse_family');
         if (savedFam) {
             setFamilyMember(JSON.parse(savedFam));
             setInputFamily(JSON.parse(savedFam));
-        } else {
-            // Force Edit Mode if no family member found so user sees the input
+        }
+        // Always show edit if no family member, OR if explicit edit requested
+        if (!savedFam) {
             setEditFamily(true);
         }
 
         const savedEmergency = localStorage.getItem('mediverse_emergency');
-
-
         if (savedEmergency) {
             setEmergencyData(JSON.parse(savedEmergency));
         }
     }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+
+    const connectSmartwatch = () => {
+        const confirmConnect = window.confirm("Search for nearby Smartwatch?");
+        if (!confirmConnect) return;
+
+        alert("Scanning for devices...");
+        setTimeout(() => {
+            setSmartwatchConnected(true);
+            setHealthMetrics({
+                bpm: '72',
+                bp: '120/80',
+                steps: '4,500'
+            });
+            alert("Connected to 'Galaxy Watch 6'!");
+        }, 2000);
+    };
+
+    const handleHealthyHabit = (tip) => {
+        // Mock data from "internet"
+        const details = {
+            'Morning Warmup': "Do 10 mins of stretching: Neck rolls, arm circles, and touching toes. It improves blood flow!",
+            'Balanced Diet': "Eat a rainbow! Include spinach, carrots, and berries. Avoid processed sugar.",
+            'Hydration': "Drink at least 8 glasses (2 liters) of water daily. Keep a bottle near your desk.",
+            'Sleep Well': "Avoid screens 1 hour before bed. Try reading a book for deep REM sleep."
+        };
+        alert(`${tip.title} Tip:\n\n${details[tip.title] || "Stay consistent for best results!"}`);
+    };
+
 
 
     const saveFamilyMember = () => {
@@ -670,20 +717,28 @@ const Home = ({ user, logout, role }) => {
     };
 
 
+
     const handleEmergency = async () => {
         if (!familyMember) return window.alert("Please setup family contact first!");
 
-        // (Keep existing logic but streamlined for this demo)
-        // Assuming logic is same as before, simplified for rewrite
+        const confirmed = window.confirm("ARE YOU SURE you want to trigger an Emergency Alert?");
+        if (!confirmed) return;
+
         setLoading(true);
         // Simulate API
         setTimeout(() => {
-            const mockRes = { hospital: { name: 'City Hospital' }, ambulance: { eta: '8 mins', driver_name: 'Rahul' } };
+            const mockRes = {
+                hospital: { name: 'City Hospital' },
+                ambulance: { eta: '8 mins', driver_name: 'Rahul', contact: '9876543210' }
+            };
             setEmergencyData(mockRes);
             setLoading(false);
-            window.alert("Ambulance Dispatched! Help is on the way.");
+
+            // Detailed Alert as requested
+            window.alert(`🚨 EMERGENCY ALERT SENT 🚨\n\nFamily Member (${familyMember.name}) has been notified.\n\n🚑 Ambulance Dispatched!\nDriver: ${mockRes.ambulance.driver_name}\nContact: ${mockRes.ambulance.contact}\nETA: ${mockRes.ambulance.eta}\n\n🏥 Destination: ${mockRes.hospital.name}`);
         }, 1500);
     };
+
 
 
 
@@ -694,6 +749,7 @@ const Home = ({ user, logout, role }) => {
     };
 
     if (role === 'doctor') return <DoctorDashboard user={user} logout={logout} />;
+
 
     return <PatientDashboard
         user={user}
@@ -710,7 +766,14 @@ const Home = ({ user, logout, role }) => {
         inputFamily={inputFamily}
         setInputFamily={setInputFamily}
         saveFamilyMember={saveFamilyMember}
+
+        // Pass new props
+        smartwatchConnected={smartwatchConnected}
+        connectSmartwatch={connectSmartwatch}
+        healthMetrics={healthMetrics}
+        handleHealthyHabit={handleHealthyHabit}
     />;
+
 
 };
 
