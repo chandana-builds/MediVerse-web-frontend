@@ -1,12 +1,21 @@
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
+@import "tailwindcss";
 
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
 
 :root {
   --primary: #28328c;
   --bg-main: #f8fafc;
+}
+
+@theme {
+  --color-primary: #28328c;
+  --color-primary-dark: #1a237e;
+  --color-background: #f8fafc;
+  --color-surface: #ffffff;
+  --font-sans: Outfit, Inter, sans-serif;
+  --radius-xl: 1rem;
+  --radius-2xl: 1.5rem;
+  --radius-3xl: 2rem;
 }
 
 body {
