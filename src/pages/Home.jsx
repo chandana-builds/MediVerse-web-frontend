@@ -569,7 +569,7 @@ const HealthyTipsView = () => {
 // --- Doctor Dashboard ---
 const DoctorDashboard = ({ user, logout }) => {
     return (
-        <div className="min-h-screen bg-slate-50 p-6 md:p-8 font-sans text-[#333333] max-w-7xl mx-auto space-y-8">
+        <div className="min-h-screen bg-slate-50 p-6 md:p-8 font-sans text-[#333333] max-w-[900px] mx-auto space-y-8">
             <nav className="flex items-center justify-between bg-white border border-slate-100 shadow-sm p-6 rounded-[24px]">
                 <div className="flex items-center gap-4">
                     <div className="bg-blue-50 p-2 rounded-xl">

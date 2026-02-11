@@ -109,7 +109,7 @@ const App = () => {
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-white p-8 w-full max-w-2xl shadow-xl rounded-[24px] border border-slate-100 relative"
+        className="bg-white p-8 w-full max-w-[900px] shadow-xl rounded-[24px] border border-slate-100 relative"
       >
         <div className="flex justify-center mb-6">
           <div className="bg-[#1e88e5]/10 p-4 rounded-full shadow-sm">
@@ -164,7 +164,7 @@ const App = () => {
             <form onSubmit={view === 'login' ? handleLogin : handleRegister} className="space-y-6">
               {/* Registration Form */}
               {view === 'register' && (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <input
                     className="input-field border-slate-200 focus:border-[#1e88e5] focus:ring-[#1e88e5]/20"
                     placeholder="Full Name"
