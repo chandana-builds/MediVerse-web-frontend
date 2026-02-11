@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+// eslint-disable-next-line no-unused-vars
 import { motion } from 'framer-motion';
 import { Heart, Stethoscope, User, ShieldCheck } from 'lucide-react';
 import { authService } from './services/api';
@@ -100,7 +101,7 @@ const App = () => {
   };
 
   if (view === 'dashboard' && user) {
-    return <Home user={user} setUser={setUser} logout={logout} role={role} />;
+    return <Home user={user} logout={logout} role={role} />;
   }
 
   return (

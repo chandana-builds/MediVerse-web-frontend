@@ -1,0 +1,39 @@
+﻿
+> frontend-react@0.0.0 lint
+> eslint .
+
+
+C:\Users\LENOVO\OneDrive\Desktop\p\frontend-react\src\App.jsx
+  2:10  error  'motion' is defined but never used. Allowed unused vars must match /^[A-Z_]/u  no-unused-vars
+
+C:\Users\LENOVO\OneDrive\Desktop\p\frontend-react\src\pages\Home.jsx
+    2:10  error  'motion' is defined but never used. Allowed unused vars must match /^[A-Z_]/u                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       no-unused-vars
+   17:46  error  Error: Cannot call impure function during render
+
+`Math.random` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).
+
+  15 |     const [booking, setBooking] = useState({ hospital: '', department: 'General Medicine', date: '', slot: '', reason: '' });
+  16 |
+> 17 |     const tokenId = useMemo(() => Math.floor(Math.random() * 10000), []);
+     |                                              ^^^^^^^^^^^^^ Cannot call impure function
+  18 |
+  19 |     const hospitals = ['City General Hospital', 'St. Mary\'s Medical Center', 'Apex Heart Institute', 'Green Valley Clinic'];
+  20 |     const slots = ['09:00 AM', '10:30 AM', '02:00 PM', '04:30 PM', '06:00 PM'];                                                                                                                     react-hooks/purity
+  649:17  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+  647 |                 // Streak broken
+  648 |                 localStorage.setItem('mv_streak', '0');
+> 649 |                 setStreak(0);
+      |                 ^^^^^^^^^ Avoid calling setState() directly within an effect
+  650 |             }
+  651 |         }
+  652 |     }, []);  react-hooks/set-state-in-effect
+
+Γ£û 4 problems (4 errors, 0 warnings)
+

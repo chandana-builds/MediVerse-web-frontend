@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+// eslint-disable-next-line no-unused-vars
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     Heart, Activity, Calendar, Plus, PhoneCall,
@@ -6,13 +7,20 @@ import {
     ShieldCheck, MapPin, Clock, LogOut, ArrowLeft, Search, Pill, ShoppingCart, CheckCircle, CreditCard, Truck, Camera, Edit2,
     Utensils, Dumbbell, Sun, ChevronRight, ChevronLeft, Package, FileText, Upload
 } from 'lucide-react';
-import { emergencyService, patientService } from '../services/api';
+import { emergencyService } from '../services/api';
 
 // --- Sub-Views ---
 
-const BookingView = ({ setActiveView, user }) => {
+const BookingView = ({ setActiveView }) => {
     const [step, setStep] = useState(1);
     const [booking, setBooking] = useState({ hospital: '', department: 'General Medicine', date: '', slot: '', reason: '' });
+
+    const [tokenId, setTokenId] = useState(null);
+
+    useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setTokenId(Math.floor(Math.random() * 10000));
+    }, []);
 
     const hospitals = ['City General Hospital', 'St. Mary\'s Medical Center', 'Apex Heart Institute', 'Green Valley Clinic'];
     const slots = ['09:00 AM', '10:30 AM', '02:00 PM', '04:30 PM', '06:00 PM'];
@@ -117,7 +125,7 @@ const BookingView = ({ setActiveView, user }) => {
                         </div>
                         <div className="flex justify-between">
                             <span className="text-slate-400 font-medium">Token ID</span>
-                            <span className="font-bold text-[#1e88e5]">#MV-{Math.floor(Math.random() * 10000)}</span>
+                            <span className="font-bold text-[#1e88e5]">#MV-{tokenId}</span>
                         </div>
                     </div>
                     <button onClick={() => setActiveView('dashboard')} className="mt-8 text-[#1e88e5] font-bold hover:underline">Return to Dashboard</button>
@@ -625,9 +633,161 @@ const DoctorDashboard = ({ user, logout }) => {
     );
 };
 
+// --- New Features ---
+
+const LocalStreak = () => {
+    const [streak, setStreak] = useState(() => {
+        const stored = parseInt(localStorage.getItem('mv_streak') || '0');
+        const lastDate = localStorage.getItem('mv_last_date');
+        const today = new Date().toDateString();
+        // Check if streak is broken
+        if (lastDate && lastDate !== today) {
+            const last = new Date(lastDate);
+            const diff = (new Date(today) - last) / (1000 * 60 * 60 * 24);
+            if (diff > 1) return 0;
+        }
+        return stored;
+    });
+
+    const [doneToday, setDoneToday] = useState(() => {
+        const lastDate = localStorage.getItem('mv_last_date');
+        return lastDate === new Date().toDateString();
+    });
+
+    useEffect(() => {
+        // Sync localStorage if streak was reset in initializer
+        const stored = parseInt(localStorage.getItem('mv_streak') || '0');
+        if (streak === 0 && stored !== 0) {
+            localStorage.setItem('mv_streak', '0');
+        }
+    }, [streak]);
+
+    const markDone = () => {
+        if (doneToday) return;
+        const newStreak = streak + 1;
+        setStreak(newStreak);
+        setDoneToday(true);
+        localStorage.setItem('mv_streak', newStreak.toString());
+        localStorage.setItem('mv_last_date', new Date().toDateString());
+    };
+
+    return (
+        <div className="bg-gradient-to-r from-blue-500 to-blue-600 p-6 rounded-[24px] text-white shadow-lg shadow-blue-200 flex items-center justify-between">
+            <div>
+                <h3 className="font-bold text-lg opacity-90">Health Streak</h3>
+                <div className="flex items-baseline gap-2">
+                    <span className="text-4xl font-bold">{streak}</span>
+                    <span className="text-sm opacity-80">Days</span>
+                </div>
+            </div>
+            <button
+                onClick={markDone}
+                disabled={doneToday}
+                className={`px-6 py-3 rounded-[16px] font-bold transition-all ${doneToday
+                    ? 'bg-white/20 cursor-default'
+                    : 'bg-white text-blue-600 hover:scale-105 shadow-sm'
+                    }`}
+            >
+                {doneToday ? 'Done for Today' : 'Mark Done'}
+            </button>
+        </div>
+    );
+};
+
+const SmartwatchDisplay = () => {
+    const [connected, setConnected] = useState(false);
+    const [loading, setLoading] = useState(false);
+
+    const handleConnect = () => {
+        setLoading(true);
+        setTimeout(() => {
+            setConnected(true);
+            setLoading(false);
+        }, 1500);
+    };
+
+    if (!connected) {
+        return (
+            <div className="bg-white p-6 rounded-[24px] border border-slate-100 shadow-sm flex flex-col items-center justify-center text-center gap-4">
+                <div className="bg-slate-50 p-4 rounded-full">
+                    <Activity className="w-8 h-8 text-slate-400" />
+                </div>
+                <div>
+                    <h3 className="font-bold text-slate-700">Connect Smartwatch</h3>
+                    <p className="text-sm text-slate-400">Sync your health metrics in real-time</p>
+                </div>
+                <button
+                    onClick={handleConnect}
+                    disabled={loading}
+                    className="btn-primary bg-[#1e88e5] text-white px-6 py-3 rounded-[16px] font-bold shadow-lg shadow-blue-200"
+                >
+                    {loading ? 'Connecting...' : 'Connect Watch'}
+                </button>
+            </div>
+        );
+    }
+
+    return (
+        <div className="bg-white p-6 rounded-[24px] border border-slate-100 shadow-sm space-y-4 animate-in fade-in zoom-in duration-300">
+            <div className="flex items-center justify-between border-b border-slate-50 pb-4">
+                <div className="flex items-center gap-3">
+                    <div className="bg-green-50 p-2 rounded-xl">
+                        <Activity className="w-5 h-5 text-green-500" />
+                    </div>
+                    <div>
+                        <h3 className="font-bold text-slate-700">Live Health Data</h3>
+                        <p className="text-xs text-slate-400 flex items-center gap-1">
+                            <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+                            Syncing now
+                        </p>
+                    </div>
+                </div>
+                <button onClick={() => setConnected(false)} className="text-xs text-red-400 font-bold hover:text-red-500">Disconnect</button>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+                <div className="p-3 bg-slate-50 rounded-[16px] border border-slate-100">
+                    <span className="text-xs text-slate-400 block mb-1">Heart Rate</span>
+                    <span className="text-xl font-bold text-[#333333]">72 <span className="text-xs font-normal text-slate-400">bpm</span></span>
+                </div>
+                <div className="p-3 bg-slate-50 rounded-[16px] border border-slate-100">
+                    <span className="text-xs text-slate-400 block mb-1">Blood Pressure</span>
+                    <span className="text-xl font-bold text-[#333333]">120/80</span>
+                </div>
+                <div className="p-3 bg-slate-50 rounded-[16px] border border-slate-100">
+                    <span className="text-xs text-slate-400 block mb-1">SpO2</span>
+                    <span className="text-xl font-bold text-[#333333]">98%</span>
+                </div>
+                <div className="p-3 bg-slate-50 rounded-[16px] border border-slate-100">
+                    <span className="text-xs text-slate-400 block mb-1">Steps</span>
+                    <span className="text-xl font-bold text-[#333333]">4,521</span>
+                </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+                <div className="p-3 bg-slate-50 rounded-[16px] border border-slate-100 col-span-2 flex justify-between items-center">
+                    <div>
+                        <span className="text-xs text-slate-400 block mb-1">Sleep (Last Night)</span>
+                        <span className="text-xl font-bold text-[#333333]">7h 20m</span>
+                    </div>
+                    <span className="bg-green-100 text-green-700 text-xs px-2 py-1 rounded-full font-bold">Good</span>
+                </div>
+            </div>
+
+            <div className="flex justify-between items-center pt-2">
+                <span className="text-xs text-slate-400">Active Calories: <b className="text-[#333333]">320 kcal</b></span>
+                <span className="text-xs text-green-600 font-bold flex items-center gap-1">
+                    <Heart className="w-3 h-3 fill-current" /> Normal Rhythm
+                </span>
+            </div>
+        </div>
+    );
+};
+
+
 // --- Main Home Component ---
 
-const Home = ({ user, setUser, logout, role }) => {
+const Home = ({ user, logout, role }) => {
     const [emergencyData, setEmergencyData] = useState(null);
     const [loading, setLoading] = useState(false);
     const [activeView, setActiveView] = useState('dashboard');
@@ -714,181 +874,188 @@ const Home = ({ user, setUser, logout, role }) => {
     }
 
     return (
-        <div className="min-h-screen bg-white text-[#333333] font-sans p-6 md:p-8 space-y-8 max-w-7xl mx-auto">
-            <nav className="flex items-center justify-between bg-white border border-slate-100 shadow-sm p-6 rounded-[24px]">
-                <div className="flex items-center gap-4">
-                    <div className="bg-[#1e88e5]/10 p-2 rounded-xl">
-                        <Heart className="text-[#1e88e5] w-6 h-6" fill="currentColor" />
+        <div className="min-h-screen bg-slate-50 text-[#333333] font-sans">
+            <div className="app-container space-y-8">
+                <nav className="w-full flex items-center justify-between bg-white border border-slate-100 shadow-sm p-6 rounded-[24px]">
+                    <div className="flex items-center gap-4">
+                        <div className="bg-[#1e88e5]/10 p-2 rounded-xl">
+                            <Heart className="text-[#1e88e5] w-6 h-6" fill="currentColor" />
+                        </div>
+                        <span className="text-2xl font-bold tracking-tight text-[#1e88e5]">MediVerse</span>
                     </div>
-                    <span className="text-2xl font-bold tracking-tight text-[#1e88e5]">MediVerse</span>
-                </div>
-                <div className="flex items-center gap-6">
-                    <div className="hidden md:flex flex-col items-end">
-                        <span className="text-sm text-slate-400">Welcome,</span>
-                        <span className="font-semibold text-slate-700">{user?.name}</span>
+                    <div className="flex items-center gap-6">
+                        <div className="hidden md:flex flex-col items-end">
+                            <span className="text-sm text-slate-400">Welcome,</span>
+                            <span className="font-semibold text-slate-700">{user?.name}</span>
+                        </div>
+                        <button onClick={logout} className="p-3 hover:bg-slate-50 rounded-full transition-colors">
+                            <LogOut className="w-5 h-5 text-slate-400" />
+                        </button>
                     </div>
-                    <button onClick={logout} className="p-3 hover:bg-slate-50 rounded-full transition-colors">
-                        <LogOut className="w-5 h-5 text-slate-400" />
-                    </button>
-                </div>
-            </nav>
+                </nav>
 
-            {activeView === 'booking' ? <BookingView setActiveView={setActiveView} user={user} /> :
-                activeView === 'pharmacy' ? <PharmacyView setActiveView={setActiveView} /> :
-                    activeView === 'reports' ? <ReportsView setActiveView={setActiveView} /> :
-                        activeView === 'history' ? <div onClick={() => setActiveView('dashboard')}>History Placeholder (Back)</div> :
-                            (
-                                <div className="space-y-8">
-                                    {/* Removed Streak UI */}
+                {activeView === 'booking' ? <BookingView setActiveView={setActiveView} user={user} /> :
+                    activeView === 'pharmacy' ? <PharmacyView setActiveView={setActiveView} /> :
+                        activeView === 'reports' ? <ReportsView setActiveView={setActiveView} /> :
+                            activeView === 'history' ? <div onClick={() => setActiveView('dashboard')}>History Placeholder (Back)</div> :
+                                (
+                                    <div className="space-y-8">
+                                        {/* New Streak and Smartwatch UI */}
+                                        < div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
+                                            <LocalStreak />
+                                            <SmartwatchDisplay />
+                                        </div>
 
-                                    {/* Healthy Tips Section */}
-                                    <div>
-                                        <h3 className="text-xl font-bold text-slate-700 mb-4 px-2">Healthy Habits</h3>
-                                        <HealthyTipsView />
-                                    </div>
+                                        {/* Healthy Tips Section */}
+                                        <div className="w-full">
+                                            <h3 className="text-xl font-bold text-slate-700 mb-4 px-2 text-left">Healthy Habits</h3>
+                                            <HealthyTipsView />
+                                        </div>
 
-                                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                                        <div className="lg:col-span-2 space-y-8">
-                                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                                                {[
-                                                    { icon: Calendar, label: 'Book Visit', color: 'text-[#1e88e5]', bg: 'bg-blue-50', action: 'booking' },
-                                                    { icon: Pill, label: 'Pharmacy', color: 'text-[#1e88e5]', bg: 'bg-blue-50', action: 'pharmacy' },
-                                                    { icon: History, label: 'History', color: 'text-[#1e88e5]', bg: 'bg-blue-50', action: 'history' },
-                                                    { icon: Plus, label: 'Reports', color: 'text-[#1e88e5]', bg: 'bg-blue-50', action: 'reports' },
-                                                ].map((item, i) => (
-                                                    <motion.button
-                                                        key={i}
-                                                        onClick={() => item.action && setActiveView(item.action)}
-                                                        whileHover={{ y: -2 }}
-                                                        className="bg-white border border-slate-100 p-6 rounded-[24px] shadow-sm flex flex-col items-center gap-3 hover:shadow-md transition-all group"
-                                                    >
-                                                        <div className={`${item.bg} p-4 rounded-full group-hover:scale-110 transition-transform`}>
-                                                            <item.icon className={`w-6 h-6 ${item.color}`} />
+                                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 w-full">
+                                            <div className="lg:col-span-2 space-y-8">
+                                                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                                    {[
+                                                        { icon: Calendar, label: 'Book Visit', color: 'text-[#1e88e5]', bg: 'bg-blue-50', action: 'booking' },
+                                                        { icon: Pill, label: 'Pharmacy', color: 'text-[#1e88e5]', bg: 'bg-blue-50', action: 'pharmacy' },
+                                                        { icon: History, label: 'History', color: 'text-[#1e88e5]', bg: 'bg-blue-50', action: 'history' },
+                                                        { icon: Plus, label: 'Reports', color: 'text-[#1e88e5]', bg: 'bg-blue-50', action: 'reports' },
+                                                    ].map((item, i) => (
+                                                        <motion.button
+                                                            key={i}
+                                                            onClick={() => item.action && setActiveView(item.action)}
+                                                            whileHover={{ y: -2 }}
+                                                            className="bg-white border border-slate-100 p-6 rounded-[24px] shadow-sm flex flex-col items-center gap-3 hover:shadow-md transition-all group"
+                                                        >
+                                                            <div className={`${item.bg} p-4 rounded-full group-hover:scale-110 transition-transform`}>
+                                                                <item.icon className={`w-6 h-6 ${item.color}`} />
+                                                            </div>
+                                                            <span className="text-sm font-bold text-slate-600 group-hover:text-[#1e88e5]">{item.label}</span>
+                                                        </motion.button>
+                                                    ))}
+                                                </div>
+
+                                                <section className="bg-white border border-slate-100 p-6 rounded-[24px] shadow-sm">
+                                                    <div className="flex items-center justify-between mb-4">
+                                                        <h3 className="text-lg font-bold text-slate-700">Family Emergency Contact</h3>
+                                                        {familyMember && !editFamily && (
+                                                            <button onClick={() => setEditFamily(true)} className="text-[#1e88e5] text-sm font-bold flex items-center gap-1">
+                                                                <Edit2 className="w-4 h-4" /> Edit
+                                                            </button>
+                                                        )}
+                                                    </div>
+
+                                                    {(!familyMember || editFamily) ? (
+                                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+                                                            <div className="space-y-1 text-left">
+                                                                <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Name</label>
+                                                                <input
+                                                                    className="input-field border-slate-200 focus:border-[#1e88e5] focus:ring-[#1e88e5]/20 rounded-[12px]"
+                                                                    value={inputFamily.name}
+                                                                    onChange={e => setInputFamily({ ...inputFamily, name: e.target.value })}
+                                                                />
+                                                            </div>
+                                                            <div className="space-y-1 text-left">
+                                                                <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Phone</label>
+                                                                <input
+                                                                    className="input-field border-slate-200 focus:border-[#1e88e5] focus:ring-[#1e88e5]/20 rounded-[12px]"
+                                                                    value={inputFamily.phone}
+                                                                    onChange={e => setInputFamily({ ...inputFamily, phone: e.target.value })}
+                                                                />
+                                                            </div>
+                                                            <button onClick={saveFamilyMember} className="btn-primary py-3 text-sm bg-[#1e88e5] hover:bg-blue-600 shadow-md shadow-blue-200 h-[46px]">Save Contact</button>
                                                         </div>
-                                                        <span className="text-sm font-bold text-slate-600 group-hover:text-[#1e88e5]">{item.label}</span>
-                                                    </motion.button>
-                                                ))}
+                                                    ) : (
+                                                        <div className="bg-slate-50 p-4 rounded-[20px] flex items-center gap-4 border border-slate-100">
+                                                            <div className="bg-blue-100 p-3 rounded-full">
+                                                                <User className="w-6 h-6 text-[#1e88e5]" />
+                                                            </div>
+                                                            <div className="text-left">
+                                                                <h4 className="font-bold text-slate-700">{familyMember.name}</h4>
+                                                                <p className="text-sm text-slate-400">{familyMember.phone}</p>
+                                                            </div>
+                                                            <span className="ml-auto text-xs bg-green-100 text-green-700 px-3 py-1 rounded-full font-bold">Active</span>
+                                                        </div>
+                                                    )}
+                                                </section>
                                             </div>
 
-                                            <section className="bg-white border border-slate-100 p-6 rounded-[24px] shadow-sm">
-                                                <div className="flex items-center justify-between mb-4">
-                                                    <h3 className="text-lg font-bold text-slate-700">Family Emergency Contact</h3>
-                                                    {familyMember && !editFamily && (
-                                                        <button onClick={() => setEditFamily(true)} className="text-[#1e88e5] text-sm font-bold flex items-center gap-1">
-                                                            <Edit2 className="w-4 h-4" /> Edit
+                                            <div className="space-y-6">
+                                                <motion.div
+                                                    whileHover={{ scale: 1.02 }}
+                                                    className="bg-white border-2 border-red-50 p-8 rounded-[24px] shadow-lg relative overflow-hidden group"
+                                                >
+                                                    <div className="relative z-10 text-center">
+                                                        <div className="bg-red-50 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6">
+                                                            <AlertTriangle className="text-red-500 w-10 h-10" />
+                                                        </div>
+                                                        <h2 className="text-2xl font-bold mb-2 text-slate-700">Medical Emergency?</h2>
+                                                        <p className="text-slate-400 text-sm mb-6">Press below to alert nearby ambulances immediately.</p>
+                                                        <button
+                                                            onClick={handleEmergency}
+                                                            disabled={loading}
+                                                            className="bg-red-500 hover:bg-red-600 text-white w-full py-5 rounded-[20px] font-bold text-lg flex items-center justify-center gap-3 transition-all active:scale-95 shadow-xl shadow-red-500/30"
+                                                        >
+                                                            <PhoneCall className="w-6 h-6 animate-pulse" />
+                                                            {loading ? 'Dispatching...' : 'Call Ambulance'}
                                                         </button>
+                                                    </div>
+                                                </motion.div>
+
+                                                <AnimatePresence>
+                                                    {emergencyData && (
+                                                        <motion.div
+                                                            initial={{ opacity: 0, y: 20 }}
+                                                            animate={{ opacity: 1, y: 0 }}
+                                                            exit={{ opacity: 0, y: 20 }}
+                                                            className="bg-white border-2 border-[#1e88e5] p-6 rounded-[24px] shadow-xl"
+                                                        >
+                                                            <div className="flex items-center gap-3 mb-4">
+                                                                <div className="bg-blue-50 p-3 rounded-xl">
+                                                                    <Ambulance className="w-6 h-6 text-[#1e88e5]" />
+                                                                </div>
+                                                                <div>
+                                                                    <h4 className="font-bold text-slate-700">Ambulance En Route</h4>
+                                                                    <span className="text-xs text-slate-400">Tracking ID: #{emergencyData.requestId || 'SOS-8892'}</span>
+                                                                </div>
+                                                            </div>
+
+                                                            <div className="space-y-4">
+                                                                <div className="flex justify-between items-end">
+                                                                    <span className="text-slate-400 text-sm">Estimated Arrival</span>
+                                                                    <span className="text-2xl font-bold text-[#1e88e5]">{emergencyData.ambulance?.eta || '12 mins'}</span>
+                                                                </div>
+                                                                <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+                                                                    <div className="bg-[#1e88e5] h-full w-[60%] animate-pulse"></div>
+                                                                </div>
+
+                                                                <div className="bg-slate-50 p-4 rounded-[20px] space-y-2">
+                                                                    <div className="flex items-center gap-3 text-sm">
+                                                                        <MapPin className="w-4 h-4 text-slate-400" />
+                                                                        <span className="font-medium text-slate-600">{emergencyData.hospital?.name || 'City Hospital'}</span>
+                                                                    </div>
+                                                                    <div className="flex items-center gap-3 text-sm">
+                                                                        <User className="w-4 h-4 text-slate-400" />
+                                                                        <span className="text-slate-600">Driver: {emergencyData.ambulance?.driver_name || 'Assigned Driver'}</span>
+                                                                    </div>
+                                                                </div>
+
+                                                                <button
+                                                                    onClick={clearEmergency}
+                                                                    className="w-full py-3 text-slate-400 text-sm font-bold hover:text-slate-600 border border-slate-200 rounded-[16px] transition-colors hover:bg-slate-50"
+                                                                >
+                                                                    Dismiss Tracking
+                                                                </button>
+                                                            </div>
+                                                        </motion.div>
                                                     )}
-                                                </div>
-
-                                                {(!familyMember || editFamily) ? (
-                                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
-                                                        <div className="space-y-1">
-                                                            <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Name</label>
-                                                            <input
-                                                                className="input-field border-slate-200 focus:border-[#1e88e5] focus:ring-[#1e88e5]/20 rounded-[12px]"
-                                                                value={inputFamily.name}
-                                                                onChange={e => setInputFamily({ ...inputFamily, name: e.target.value })}
-                                                            />
-                                                        </div>
-                                                        <div className="space-y-1">
-                                                            <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Phone</label>
-                                                            <input
-                                                                className="input-field border-slate-200 focus:border-[#1e88e5] focus:ring-[#1e88e5]/20 rounded-[12px]"
-                                                                value={inputFamily.phone}
-                                                                onChange={e => setInputFamily({ ...inputFamily, phone: e.target.value })}
-                                                            />
-                                                        </div>
-                                                        <button onClick={saveFamilyMember} className="btn-primary py-3 text-sm bg-[#1e88e5] hover:bg-blue-600 shadow-md shadow-blue-200">Save Contact</button>
-                                                    </div>
-                                                ) : (
-                                                    <div className="bg-slate-50 p-4 rounded-[20px] flex items-center gap-4 border border-slate-100">
-                                                        <div className="bg-blue-100 p-3 rounded-full">
-                                                            <User className="w-6 h-6 text-[#1e88e5]" />
-                                                        </div>
-                                                        <div>
-                                                            <h4 className="font-bold text-slate-700">{familyMember.name}</h4>
-                                                            <p className="text-sm text-slate-400">{familyMember.phone}</p>
-                                                        </div>
-                                                        <span className="ml-auto text-xs bg-green-100 text-green-700 px-3 py-1 rounded-full font-bold">Active</span>
-                                                    </div>
-                                                )}
-                                            </section>
-                                        </div>
-
-                                        <div className="space-y-6">
-                                            <motion.div
-                                                whileHover={{ scale: 1.02 }}
-                                                className="bg-white border-2 border-red-50 p-8 rounded-[24px] shadow-lg relative overflow-hidden group"
-                                            >
-                                                <div className="relative z-10 text-center">
-                                                    <div className="bg-red-50 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6">
-                                                        <AlertTriangle className="text-red-500 w-10 h-10" />
-                                                    </div>
-                                                    <h2 className="text-2xl font-bold mb-2 text-slate-700">Medical Emergency?</h2>
-                                                    <p className="text-slate-400 text-sm mb-6">Press below to alert nearby ambulances immediately.</p>
-                                                    <button
-                                                        onClick={handleEmergency}
-                                                        disabled={loading}
-                                                        className="bg-red-500 hover:bg-red-600 text-white w-full py-5 rounded-[20px] font-bold text-lg flex items-center justify-center gap-3 transition-all active:scale-95 shadow-xl shadow-red-500/30"
-                                                    >
-                                                        <PhoneCall className="w-6 h-6 animate-pulse" />
-                                                        {loading ? 'Dispatching...' : 'Call Ambulance'}
-                                                    </button>
-                                                </div>
-                                            </motion.div>
-
-                                            <AnimatePresence>
-                                                {emergencyData && (
-                                                    <motion.div
-                                                        initial={{ opacity: 0, y: 20 }}
-                                                        animate={{ opacity: 1, y: 0 }}
-                                                        exit={{ opacity: 0, y: 20 }}
-                                                        className="bg-white border-2 border-[#1e88e5] p-6 rounded-[24px] shadow-xl"
-                                                    >
-                                                        <div className="flex items-center gap-3 mb-4">
-                                                            <div className="bg-blue-50 p-3 rounded-xl">
-                                                                <Ambulance className="w-6 h-6 text-[#1e88e5]" />
-                                                            </div>
-                                                            <div>
-                                                                <h4 className="font-bold text-slate-700">Ambulance En Route</h4>
-                                                                <span className="text-xs text-slate-400">Tracking ID: #{emergencyData.requestId || 'SOS-8892'}</span>
-                                                            </div>
-                                                        </div>
-
-                                                        <div className="space-y-4">
-                                                            <div className="flex justify-between items-end">
-                                                                <span className="text-slate-400 text-sm">Estimated Arrival</span>
-                                                                <span className="text-2xl font-bold text-[#1e88e5]">{emergencyData.ambulance?.eta || '12 mins'}</span>
-                                                            </div>
-                                                            <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
-                                                                <div className="bg-[#1e88e5] h-full w-[60%] animate-pulse"></div>
-                                                            </div>
-
-                                                            <div className="bg-slate-50 p-4 rounded-[20px] space-y-2">
-                                                                <div className="flex items-center gap-3 text-sm">
-                                                                    <MapPin className="w-4 h-4 text-slate-400" />
-                                                                    <span className="font-medium text-slate-600">{emergencyData.hospital?.name || 'City Hospital'}</span>
-                                                                </div>
-                                                                <div className="flex items-center gap-3 text-sm">
-                                                                    <User className="w-4 h-4 text-slate-400" />
-                                                                    <span className="text-slate-600">Driver: {emergencyData.ambulance?.driver_name || 'Assigned Driver'}</span>
-                                                                </div>
-                                                            </div>
-
-                                                            <button
-                                                                onClick={clearEmergency}
-                                                                className="w-full py-3 text-slate-400 text-sm font-bold hover:text-slate-600 border border-slate-200 rounded-[16px] transition-colors hover:bg-slate-50"
-                                                            >
-                                                                Dismiss Tracking
-                                                            </button>
-                                                        </div>
-                                                    </motion.div>
-                                                )}
-                                            </AnimatePresence>
+                                                </AnimatePresence>
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-                            )}
+                                )
+                }
+            </div>
         </div>
     );
 };
