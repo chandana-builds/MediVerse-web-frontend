@@ -1,0 +1,22 @@
+[0m[0m
+[0m[4mC:\Users\LENOVO\OneDrive\Desktop\p\frontend-react\src\pages\Home.jsx[24m[0m
+[0m    [2m2:1[22m   [33mwarning[39m  Unused eslint-disable directive (no problems were reported from 'no-unused-vars')[0m
+[0m  [2m623:13[22m  [31merror[39m    Error: Calling setState synchronously within an effect can trigger cascading renders[0m
+[0m[0m
+[0mEffects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:[0m
+[0m* Update external systems with the latest state from React.[0m
+[0m* Subscribe for updates from some external system, calling setState in a callback function when external state changes.[0m
+[0m[0m
+[0mCalling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).[0m
+[0m[0m
+[0m  621 |         const savedFam = localStorage.getItem('mediverse_family');[0m
+[0m  622 |         if (savedFam) {[0m
+[0m> 623 |             setFamilyMember(JSON.parse(savedFam));[0m
+[0m      |             ^^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect[0m
+[0m  624 |             setInputFamily(JSON.parse(savedFam));[0m
+[0m  625 |         }[0m
+[0m  626 |  [2mreact-hooks/set-state-in-effect[22m[0m
+[0m[0m
+[0m[31m[1m✖ 2 problems (1 error, 1 warning)[22m[39m[0m
+[0m[31m[1m[22m[39m[31m[1m  0 errors and 1 warning potentially fixable with the `--fix` option.[22m[39m[0m
+[0m[31m[1m[22m[39m[0m

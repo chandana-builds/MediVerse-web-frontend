@@ -625,10 +625,12 @@ const Home = ({ user, logout, role }) => {
         }
 
         const savedEmergency = localStorage.getItem('mediverse_emergency');
+
         if (savedEmergency) {
             setEmergencyData(JSON.parse(savedEmergency));
         }
-    }, []);
+    }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
 
     const saveFamilyMember = () => {
         if (!inputFamily.name || !inputFamily.phone) return alert("Please fill details");
