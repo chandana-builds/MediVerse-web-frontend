@@ -473,8 +473,10 @@ const DoctorDashboard = ({ user, logout }) => {
 };
 
 
-const PatientDashboard = ({ user, logout, activeView, setActiveView, emergencyData, handleEmergency, loading, familyMember, setEditFamily, inputFamily, setInputFamily, saveFamilyMember, editFamily }) => {
+
+const PatientDashboard = ({ user, logout, activeView, setActiveView, emergencyData, handleEmergency, handleVideoCall, loading, familyMember, setEditFamily, inputFamily, setInputFamily, saveFamilyMember, editFamily }) => {
     if (activeView !== 'dashboard') {
+
         return (
             <div className="min-h-screen app-container p-6 bg-slate-50">
                 {activeView === 'booking' ? <BookingView setActiveView={setActiveView} /> :
@@ -498,7 +500,8 @@ const PatientDashboard = ({ user, logout, activeView, setActiveView, emergencyDa
                         <h3 className="font-bold text-slate-800 leading-tight">Physical<br />Appointment</h3>
                         <p className="text-xs text-slate-400 mt-2">At Hospital</p>
                     </div>
-                    <div className="bg-white p-5 rounded-3xl shadow-sm hover:shadow-md transition-shadow cursor-pointer relative overflow-hidden">
+
+                    <div className="bg-white p-5 rounded-3xl shadow-sm hover:shadow-md transition-shadow cursor-pointer relative overflow-hidden" onClick={handleVideoCall}>
                         <div className="absolute top-0 right-0 bg-green-500 text-white text-[10px] font-bold px-2 py-1 rounded-bl-xl">FAST</div>
                         <div className="bg-purple-50 w-12 h-12 rounded-full flex items-center justify-center mb-4">
                             <Video className="w-6 h-6 text-purple-600" />
@@ -506,6 +509,7 @@ const PatientDashboard = ({ user, logout, activeView, setActiveView, emergencyDa
                         <h3 className="font-bold text-slate-800 leading-tight">Instant Video<br />Consult</h3>
                         <p className="text-xs text-slate-400 mt-2">Connect in 2 mins</p>
                     </div>
+
                 </div>
 
                 {/* Services Row */}
@@ -597,11 +601,13 @@ const PatientDashboard = ({ user, logout, activeView, setActiveView, emergencyDa
                     )}
                 </AnimatePresence>
 
+
                 {/* Tips */}
-                <div>
+                <div id="healthy-habits">
                     <SectionTitle title="Healthy Habits" />
                     <HealthyTipsView />
                 </div>
+
             </div>
         </div>
     );
@@ -617,14 +623,19 @@ const Home = ({ user, logout, role }) => {
     const [editFamily, setEditFamily] = useState(false);
     const [inputFamily, setInputFamily] = useState({ name: '', phone: '' });
 
+
     useEffect(() => {
         const savedFam = localStorage.getItem('mediverse_family');
         if (savedFam) {
             setFamilyMember(JSON.parse(savedFam));
             setInputFamily(JSON.parse(savedFam));
+        } else {
+            // Force Edit Mode if no family member found so user sees the input
+            setEditFamily(true);
         }
 
         const savedEmergency = localStorage.getItem('mediverse_emergency');
+
 
         if (savedEmergency) {
             setEmergencyData(JSON.parse(savedEmergency));
@@ -654,6 +665,13 @@ const Home = ({ user, logout, role }) => {
         }, 1500);
     };
 
+
+    const handleVideoCall = () => {
+        alert("Starting Secure Video Consultation...");
+        // Mock video call - opens a new meeting for demo
+        window.open("https://meet.google.com/new", "_blank");
+    };
+
     if (role === 'doctor') return <DoctorDashboard user={user} logout={logout} />;
 
     return <PatientDashboard
@@ -663,6 +681,7 @@ const Home = ({ user, logout, role }) => {
         setActiveView={setActiveView}
         emergencyData={emergencyData}
         handleEmergency={handleEmergency}
+        handleVideoCall={handleVideoCall}
         loading={loading}
         familyMember={familyMember}
         setEditFamily={setEditFamily}
@@ -671,6 +690,7 @@ const Home = ({ user, logout, role }) => {
         setInputFamily={setInputFamily}
         saveFamilyMember={saveFamilyMember}
     />;
+
 };
 
 
