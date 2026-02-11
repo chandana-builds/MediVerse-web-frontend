@@ -11,6 +11,7 @@ import { emergencyService } from '../services/api';
 
 // --- Shared Components ---
 
+
 const Header = ({ user, logout, role }) => (
     <div className="bg-primary pt-8 pb-12 px-6 rounded-b-[2.5rem] shadow-lg mb-8 relative z-10">
         <div className="flex justify-between items-center mb-6">
@@ -20,7 +21,7 @@ const Header = ({ user, logout, role }) => (
                 </div>
                 <div>
                     <p className="text-blue-100 text-xs font-medium uppercase tracking-wider">{role === 'doctor' ? 'Doctor' : 'Patient'}</p>
-                    <h1 className="font-bold text-lg leading-tight">{user?.name || 'Guest'}</h1>
+                    <h1 className="font-bold text-lg leading-tight">{user?.name || user?.username || 'Guest'}</h1>
                 </div>
             </div>
             <button onClick={logout} className="bg-white/10 p-2 rounded-full text-white hover:bg-white/20 transition-colors">
@@ -401,6 +402,106 @@ const ReportsView = ({ setActiveView }) => {
     );
 };
 
+
+// --- New Sub-Views for History and Smartwatch ---
+
+const HistoryView = ({ setActiveView }) => {
+    return (
+        <div className="space-y-6">
+            <div className="flex items-center gap-4 mb-2 px-2">
+                <button onClick={() => setActiveView('dashboard')} className="p-2 -ml-2 hover:bg-slate-100 rounded-full transition-colors">
+                    <ArrowLeft className="w-6 h-6 text-slate-700" />
+                </button>
+                <h2 className="text-2xl font-bold text-slate-800">Medical History</h2>
+            </div>
+
+            {/* Recent Hospital Visits */}
+            <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 space-y-4">
+                <h3 className="flex items-center gap-2 font-bold text-slate-700 text-lg">
+                    <Ambulance className="w-5 h-5 text-red-500" /> Recent Visits
+                </h3>
+                <div className="divide-y divide-slate-50">
+                    {[
+                        { hospital: 'City General Hospital', date: '10 Feb 2025', doctor: 'Dr. Sarah Smith', reason: 'High Fever & chills' },
+                        { hospital: 'Apex Heart Institute', date: '22 Jan 2025', doctor: 'Dr. A. Kumar', reason: 'Regular Cardiac Checkup' }
+                    ].map((visit, i) => (
+                        <div key={i} className="py-3">
+                            <div className="flex justify-between items-start">
+                                <h4 className="font-bold text-slate-800">{visit.hospital}</h4>
+                                <span className="text-xs text-slate-400 bg-slate-50 px-2 py-1 rounded-lg">{visit.date}</span>
+                            </div>
+                            <p className="text-sm text-slate-500 mt-1">Dr: {visit.doctor}</p>
+                            <p className="text-sm font-medium text-slate-600 mt-1">Reason: {visit.reason}</p>
+                        </div>
+                    ))}
+                </div>
+            </div>
+
+            {/* Lab Reports History */}
+            <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 space-y-4">
+                <h3 className="flex items-center gap-2 font-bold text-slate-700 text-lg">
+                    <FileText className="w-5 h-5 text-blue-500" /> Lab Trends
+                </h3>
+                <div className="grid grid-cols-2 gap-3">
+                    <div className="bg-slate-50 p-3 rounded-2xl">
+                        <span className="text-xs text-slate-400 block">Hemoglobin</span>
+                        <span className="text-lg font-bold text-slate-700">14.2 <span className="text-xs font-normal text-slate-400">g/dL</span></span>
+                        <div className="w-full bg-slate-200 h-1 mt-2 rounded-full overflow-hidden">
+                            <div className="bg-green-500 w-[80%] h-full"></div>
+                        </div>
+                    </div>
+                    <div className="bg-slate-50 p-3 rounded-2xl">
+                        <span className="text-xs text-slate-400 block">Blood Sugar (F)</span>
+                        <span className="text-lg font-bold text-slate-700">98 <span className="text-xs font-normal text-slate-400">mg/dL</span></span>
+                        <div className="w-full bg-slate-200 h-1 mt-2 rounded-full overflow-hidden">
+                            <div className="bg-green-500 w-[45%] h-full"></div>
+                        </div>
+                    </div>
+                    <div className="bg-slate-50 p-3 rounded-2xl">
+                        <span className="text-xs text-slate-400 block">Cholesterol</span>
+                        <span className="text-lg font-bold text-slate-700">185 <span className="text-xs font-normal text-slate-400">mg/dL</span></span>
+                        <div className="w-full bg-slate-200 h-1 mt-2 rounded-full overflow-hidden">
+                            <div className="bg-yellow-500 w-[60%] h-full"></div>
+                        </div>
+                    </div>
+                    <div className="bg-slate-50 p-3 rounded-2xl">
+                        <span className="text-xs text-slate-400 block">Vitamin D</span>
+                        <span className="text-lg font-bold text-slate-700">22 <span className="text-xs font-normal text-slate-400">ng/mL</span></span>
+                        <div className="w-full bg-slate-200 h-1 mt-2 rounded-full overflow-hidden">
+                            <div className="bg-red-500 w-[30%] h-full"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+const SmartwatchDetailView = ({ setActiveView, metrics }) => {
+    return (
+        <div className="space-y-6">
+            <div className="flex items-center gap-4 mb-2 px-2">
+                <button onClick={() => setActiveView('dashboard')} className="p-2 -ml-2 hover:bg-slate-100 rounded-full transition-colors">
+                    <ArrowLeft className="w-6 h-6 text-slate-700" />
+                </button>
+                <div className="flex items-center gap-2">
+                    <Activity className="w-6 h-6 text-green-500" />
+                    <h2 className="text-2xl font-bold text-slate-800">Live Vitals</h2>
+                </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+                {Object.entries(metrics || {}).map(([key, value], i) => (
+                    <div key={i} className="bg-white p-4 rounded-3xl shadow-sm border border-slate-100 flex flex-col justify-between">
+                        <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">{key.replace(/([A-Z])/g, ' $1').trim()}</span>
+                        <span className="text-lg font-bold text-slate-800 mt-1">{value}</span>
+                    </div>
+                ))}
+            </div>
+        </div>
+    );
+};
+
 const HealthyTipsView = ({ handleHealthyHabit }) => (
     <div className="grid grid-cols-2 gap-4">
         {[
@@ -418,6 +519,7 @@ const HealthyTipsView = ({ handleHealthyHabit }) => (
         ))}
     </div>
 );
+
 
 
 // --- Dashboards ---
@@ -477,13 +579,18 @@ const DoctorDashboard = ({ user, logout }) => {
 const PatientDashboard = ({ user, logout, activeView, setActiveView, emergencyData, handleEmergency, handleVideoCall, loading, familyMember, setEditFamily, inputFamily, setInputFamily, saveFamilyMember, editFamily, smartwatchConnected, connectSmartwatch, healthMetrics, handleHealthyHabit }) => {
     if (activeView !== 'dashboard') {
 
+
         return (
             <div className="min-h-screen app-container p-6 bg-slate-50">
                 {activeView === 'booking' ? <BookingView setActiveView={setActiveView} /> :
                     activeView === 'pharmacy' ? <PharmacyView setActiveView={setActiveView} /> :
-                        <ReportsView setActiveView={setActiveView} />}
+                        activeView === 'reports' ? <ReportsView setActiveView={setActiveView} /> :
+                            activeView === 'history' ? <HistoryView setActiveView={setActiveView} /> :
+                                activeView === 'smartwatch' ? <SmartwatchDetailView setActiveView={setActiveView} metrics={healthMetrics} /> :
+                                    <ReportsView setActiveView={setActiveView} />}
             </div>
         );
+
     }
 
     return (
@@ -512,8 +619,9 @@ const PatientDashboard = ({ user, logout, activeView, setActiveView, emergencyDa
                     </div>
 
 
+
                     {/* Connect Smartwatch Card - NEW */}
-                    <div className={`p-5 rounded-3xl shadow-sm hover:shadow-md transition-shadow cursor-pointer col-span-2 flex items-center justify-between ${smartwatchConnected ? 'bg-slate-900 border border-slate-700' : 'bg-white'}`} onClick={connectSmartwatch}>
+                    <div className={`p-5 rounded-3xl shadow-sm hover:shadow-md transition-shadow cursor-pointer col-span-2 flex items-center justify-between ${smartwatchConnected ? 'bg-slate-900 border border-slate-700' : 'bg-white'}`} onClick={smartwatchConnected ? () => setActiveView('smartwatch') : connectSmartwatch}>
                         <div className="flex items-center gap-4">
                             <div className={`w-12 h-12 rounded-full flex items-center justify-center ${smartwatchConnected ? 'bg-green-500/20' : 'bg-slate-900'}`}>
                                 <Activity className={`w-6 h-6 ${smartwatchConnected ? 'text-green-400' : 'text-green-400'}`} />
@@ -530,8 +638,11 @@ const PatientDashboard = ({ user, logout, activeView, setActiveView, emergencyDa
                         {smartwatchConnected ? (
                             <div className="flex gap-4 text-white text-xs">
                                 <div className="text-center">
-                                    <span className="block font-bold text-lg text-red-400">{healthMetrics?.bpm || 72}</span>
+                                    <span className="block font-bold text-lg text-red-400">{healthMetrics?.HeartRate?.split(' ')[0] || 72}</span>
                                     <span className="text-slate-500">BPM</span>
+                                </div>
+                                <div className="text-center">
+                                    <ChevronRight className="w-6 h-6 text-slate-500 mt-2" />
                                 </div>
                             </div>
                         ) : (
@@ -559,9 +670,10 @@ const PatientDashboard = ({ user, logout, activeView, setActiveView, emergencyDa
                             <div className="bg-blue-50 p-3 rounded-full"><FileText className="text-primary w-6 h-6" /></div>
                             <span className="text-xs font-bold text-slate-700">Lab Reports</span>
                         </div>
-                        <div className="bg-white p-4 rounded-3xl shadow-sm flex flex-col items-center gap-2 cursor-pointer">
-                            <div className="bg-red-50 p-3 rounded-full"><Activity className="text-red-500 w-6 h-6" /></div>
-                            <span className="text-xs font-bold text-slate-700">Surgeries</span>
+
+                        <div className="bg-white p-4 rounded-3xl shadow-sm flex flex-col items-center gap-2 cursor-pointer" onClick={() => setActiveView('history')}>
+                            <div className="bg-red-50 p-3 rounded-full"><History className="text-red-500 w-6 h-6" /></div>
+                            <span className="text-xs font-bold text-slate-700">History</span>
                         </div>
                     </div>
                 </div>
@@ -684,17 +796,36 @@ const Home = ({ user, logout, role }) => {
         const confirmConnect = window.confirm("Search for nearby Smartwatch?");
         if (!confirmConnect) return;
 
+
         alert("Scanning for devices...");
         setTimeout(() => {
             setSmartwatchConnected(true);
             setHealthMetrics({
-                bpm: '72',
-                bp: '120/80',
-                steps: '4,500'
+                HeartRate: '72 BPM',
+                SpO2: '98%',
+                ECG: 'Normal Sinus',
+                Sleep: '7h 12m',
+                Steps: '4,500',
+                Calories: '320 kcal',
+                Stress: 'Low (12/100)',
+                BP: '120/80 mmHg',
+                Temperature: '98.6°F',
+                Respiration: '16/min',
+                Hydration: '1.2 L',
+                Fitness: 'Excellent',
+                Workout: 'Morning Run (5km)',
+                GPS: 'Active',
+                FallDetection: 'Enabled',
+                SOS: 'Ready',
+                Reminders: 'Medication 2pm',
+                Meditation: '10 mins today',
+                Activity: 'Walking',
+                Vitals: 'Stable'
             });
             alert("Connected to 'Galaxy Watch 6'!");
         }, 2000);
     };
+
 
     const handleHealthyHabit = (tip) => {
         // Mock data from "internet"
