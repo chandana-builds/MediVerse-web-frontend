@@ -4,9 +4,24 @@
 
 
 
-/* 1. Theme Variables moved to tailwind.config.js to prevent IDE errors */
+
+/* 1. Theme Variables (Tailwind v4 syntax) */
+@theme {
+  --color-primary: #28328c;
+  --color-primary-dark: #1a237e;
+
+  --color-background: #f8fafc;
+  --color-surface: #ffffff;
+
+  --font-sans: "Outfit", "Inter", ui-sans-serif, system-ui;
+
+  --radius-xl: 1rem;
+  --radius-2xl: 1.5rem;
+  --radius-3xl: 2rem;
+}
 
 /* 2. Base & Global Styles */
+
 :root {
 
   --bg-main: #f8fafc;
