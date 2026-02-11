@@ -1,3 +1,4 @@
+
 /** @type {import('tailwindcss').Config} */
 export default {
     content: [
@@ -7,13 +8,13 @@ export default {
     theme: {
         extend: {
             colors: {
-                primary: '#28328c', // Deep Blue
+                primary: '#28328c',
                 'primary-dark': '#1a237e',
                 background: '#f8fafc',
                 surface: '#ffffff',
             },
             fontFamily: {
-                sans: ['Outfit', 'Inter', 'sans-serif'],
+                sans: ['Outfit', 'Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
             },
             borderRadius: {
                 'xl': '1rem',
