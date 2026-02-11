@@ -2,29 +2,45 @@
 
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
 
-:root {
-  --primary: #28328c;
-  --bg-main: #f8fafc;
-}
-
-@theme {
+/* 1. Theme Variables (Tailwind v4 syntax) */
+@theme inline {
   --color-primary: #28328c;
   --color-primary-dark: #1a237e;
   --color-background: #f8fafc;
   --color-surface: #ffffff;
-  --font-sans: Outfit, Inter, sans-serif;
+
+  --font-sans: "Outfit", "Inter", ui-sans-serif, system-ui;
+
   --radius-xl: 1rem;
   --radius-2xl: 1.5rem;
   --radius-3xl: 2rem;
+}
+
+/* 2. Base & Global Styles */
+:root {
+  --bg-main: #f8fafc;
 }
 
 body {
   font-family: 'Outfit', sans-serif;
   background-color: var(--bg-main);
   color: #333;
+  margin: 0;
+  padding: 0;
+  -webkit-font-smoothing: antialiased;
 }
 
-/* Custom Scrollbar */
+/* 3. Layout Components */
+.app-container {
+  max-width: 900px;
+  margin: 0 auto;
+  min-height: 100vh;
+  background-color: var(--bg-main);
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+
+/* 4. Custom UI Elements */
 ::-webkit-scrollbar {
   width: 8px;
 }
@@ -42,10 +58,4 @@ body {
   background: #94a3b8;
 }
 
-/* App Container */
-.app-container {
-  max-width: 900px;
-  margin: 0 auto;
-  min-height: 100vh;
-  background-color: var(--bg-main);
-}
+/* Ensure there is a final newline at the end of the file to prevent parsing errors */

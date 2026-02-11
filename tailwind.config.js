@@ -7,7 +7,7 @@ export default {
     theme: {
         extend: {
             colors: {
-                primary: '#28328c', // Deep Blue from Practo
+                primary: '#28328c', // Deep Blue
                 'primary-dark': '#1a237e',
                 background: '#f8fafc',
                 surface: '#ffffff',
