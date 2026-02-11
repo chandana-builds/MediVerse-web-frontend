@@ -8,18 +8,18 @@ export default {
     theme: {
         extend: {
             colors: {
-                primary: '#28328c',
-                'primary-dark': '#1a237e',
-                background: '#f8fafc',
-                surface: '#ffffff',
+                primary: 'var(--color-primary)',
+                'primary-dark': 'var(--color-primary-dark)',
+                background: 'var(--color-background)',
+                surface: 'var(--color-surface)',
             },
             fontFamily: {
-                sans: ['Outfit', 'Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+                sans: ['var(--font-sans)', 'sans-serif'],
             },
             borderRadius: {
-                'xl': '1rem',
-                '2xl': '1.5rem',
-                '3xl': '2rem',
+                'xl': 'var(--radius-xl)',
+                '2xl': 'var(--radius-2xl)',
+                '3xl': 'var(--radius-3xl)',
             },
         },
     },

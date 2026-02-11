@@ -490,6 +490,7 @@ const PatientDashboard = ({ user, logout, activeView, setActiveView, emergencyDa
         <div className="min-h-screen app-container bg-slate-50">
             <Header user={user} logout={logout} role="patient" />
 
+
             <div className="px-6 -mt-6 relative z-20 space-y-8 pb-12">
                 {/* Hero Feature Cards */}
                 <div className="grid grid-cols-2 gap-4">
@@ -509,6 +510,24 @@ const PatientDashboard = ({ user, logout, activeView, setActiveView, emergencyDa
                         <h3 className="font-bold text-slate-800 leading-tight">Instant Video<br />Consult</h3>
                         <p className="text-xs text-slate-400 mt-2">Connect in 2 mins</p>
                     </div>
+
+                    <div className="bg-white p-5 rounded-3xl shadow-sm hover:shadow-md transition-shadow cursor-pointer col-span-2 flex items-center justify-between" onClick={() => window.alert("Connecting to Smartwatch...")}>
+                        <div className="flex items-center gap-4">
+                            <div className="bg-slate-900 w-12 h-12 rounded-full flex items-center justify-center">
+                                <Activity className="w-6 h-6 text-green-400" />
+                            </div>
+                            <div>
+                                <h3 className="font-bold text-slate-800 leading-tight">Connect Smartwatch</h3>
+                                <p className="text-xs text-slate-400">Sync health data</p>
+                            </div>
+                        </div>
+                        <div className="bg-slate-100 p-2 rounded-full">
+                            <Plus className="w-5 h-5 text-slate-600" />
+                        </div>
+                    </div>
+
+
+
 
                 </div>
 
@@ -650,8 +669,9 @@ const Home = ({ user, logout, role }) => {
         setEditFamily(false);
     };
 
+
     const handleEmergency = async () => {
-        if (!familyMember) return alert("Please setup family contact first!");
+        if (!familyMember) return window.alert("Please setup family contact first!");
 
         // (Keep existing logic but streamlined for this demo)
         // Assuming logic is same as before, simplified for rewrite
@@ -661,9 +681,10 @@ const Home = ({ user, logout, role }) => {
             const mockRes = { hospital: { name: 'City Hospital' }, ambulance: { eta: '8 mins', driver_name: 'Rahul' } };
             setEmergencyData(mockRes);
             setLoading(false);
-            alert("Ambulance Dispatched!");
+            window.alert("Ambulance Dispatched! Help is on the way.");
         }, 1500);
     };
+
 
 
     const handleVideoCall = () => {

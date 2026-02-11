@@ -2,14 +2,10 @@
 
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
 
-
-
-
-/* 1. Theme Variables (Tailwind v4 syntax) */
-@theme {
+/* 1. Theme Variables (Standard CSS Variables) */
+:root {
   --color-primary: #28328c;
   --color-primary-dark: #1a237e;
-
   --color-background: #f8fafc;
   --color-surface: #ffffff;
 
@@ -18,21 +14,15 @@
   --radius-xl: 1rem;
   --radius-2xl: 1.5rem;
   --radius-3xl: 2rem;
-}
-
-/* 2. Base & Global Styles */
-
-:root {
 
   --bg-main: #f8fafc;
 }
 
+/* 2. Base Styles */
 body {
-  font-family: 'Outfit', sans-serif;
-  background-color: var(--bg-main);
+  font-family: var(--font-sans);
+  background-color: var(--color-background);
   color: #333;
-  margin: 0;
-  padding: 0;
   -webkit-font-smoothing: antialiased;
 }
 
@@ -41,27 +31,21 @@ body {
   max-width: 900px;
   margin: 0 auto;
   min-height: 100vh;
-  background-color: var(--bg-main);
-  padding-left: 1rem;
-  padding-right: 1rem;
+  background-color: var(--color-background);
+  position: relative;
+  overflow-x: hidden;
 }
 
-/* 4. Custom UI Elements */
+/* 4. Scrollbar */
 ::-webkit-scrollbar {
-  width: 8px;
+  width: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #f1f5f9;
+  background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
   background: #cbd5e1;
   border-radius: 10px;
 }
-
-::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
-}
-
-/* Ensure there is a final newline at the end of the file to prevent parsing errors */
