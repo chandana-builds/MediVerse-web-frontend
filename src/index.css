@@ -18,6 +18,27 @@
   --bg-main: #f8fafc;
 }
 
+/* Utility Class Mappings */
+.bg-primary {
+  background-color: var(--color-primary);
+}
+
+.text-primary {
+  color: var(--color-primary);
+}
+
+.border-primary {
+  border-color: var(--color-primary);
+}
+
+.bg-primary-dark {
+  background-color: var(--color-primary-dark);
+}
+
+.text-primary-dark {
+  color: var(--color-primary-dark);
+}
+
 /* 2. Base Styles */
 body {
   font-family: var(--font-sans);
