@@ -11,6 +11,7 @@ class RegisterScreen extends StatefulWidget {
 
 class _RegisterScreenState extends State<RegisterScreen> {
   final _nameController = TextEditingController();
+  final _emailController = TextEditingController();
   final _ageController = TextEditingController();
   final _phoneController = TextEditingController();
   final _addressController = TextEditingController();
@@ -20,6 +21,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   void _register() async {
     if (_nameController.text.isEmpty ||
+        _emailController.text.isEmpty ||
         _ageController.text.isEmpty ||
         _phoneController.text.isEmpty ||
         _addressController.text.isEmpty ||
@@ -37,6 +39,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       final apiService = Provider.of<ApiService>(context, listen: false);
       final result = await apiService.registerPatient({
         'name': _nameController.text.trim(),
+        'email': _emailController.text.trim(),
         'age': int.parse(_ageController.text),
         'phone': _phoneController.text.trim(),
         'address': _addressController.text.trim(),
@@ -82,6 +85,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
             ),
             const SizedBox(height: 40),
             _buildField(Icons.person_outline, 'Full Name', _nameController),
+            const SizedBox(height: 16),
+            _buildField(Icons.email_outlined, 'Email Address', _emailController, type: TextInputType.emailAddress),
             const SizedBox(height: 16),
             Row(
               children: [
