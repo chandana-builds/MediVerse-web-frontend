@@ -4,6 +4,7 @@ import '../services/emergency_service.dart';
 import '../providers/user_provider.dart';
 import 'appointments_screen.dart';
 import 'records_screen.dart';
+import 'ai_chat_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -67,6 +68,13 @@ class HomeScreen extends StatelessWidget {
             ),
           ],
         ),
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          Navigator.push(context, MaterialPageRoute(builder: (_) => const AIChatScreen()));
+        },
+        backgroundColor: const Color(0xFF3B82F6),
+        child: const Icon(Icons.chat_bubble_rounded, color: Colors.white),
       ),
     );
   }
