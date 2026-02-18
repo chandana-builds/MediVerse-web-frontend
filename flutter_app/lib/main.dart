@@ -8,6 +8,7 @@ import 'services/api_service.dart';
 import 'providers/user_provider.dart';
 
 void main() {
+  // Sync confirmed: 2026-02-18
   runApp(
     MultiProvider(
       providers: [
